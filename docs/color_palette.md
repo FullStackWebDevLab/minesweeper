@@ -174,7 +174,7 @@ Use for selected/active items like search input border.
 ### Accent subtle (background tint)
 
 ```
---accent-soft: rgba(13, 202, 240, 0.12)
+--accent-soft: rgb(13, 202, 240)
 ```
 
 Use for:
