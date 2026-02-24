@@ -1,5 +1,6 @@
 :root {
     --background-color: #080f18;
+    --surface-background-1: #0f1b26;
     --surface-background-2: #132433;
     --border-color-1: #1c3242;
     --accent: #0dcaf0;
@@ -61,7 +62,7 @@ h2 {
 .card {
     border: 2px solid var(--border-color-1);
     border-radius: 16px;
-    background-color: var(--surface-background-2);
+    background-color: var(--surface-background-1);
     display: flex;
     flex-direction: column;
     justify-content: center;
@@ -73,4 +74,5 @@ h2 {
     transform: translateY(-5px);
     border-color: var(--accent-soft);
     box-shadow: 0 0 5px var(--accent-soft);
+    background-color: var(--surface-background-2);
 }
