@@ -1,0 +1,76 @@
+:root {
+    --background-color: #080f18;
+    --surface-background-2: #132433;
+    --border-color-1: #1c3242;
+    --accent: #0dcaf0;
+    --accent-soft: rgb(13, 202, 240);
+    --text-primary: #e6f1f7;
+    --text-secondary: #a9c0cf;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Segoe UI", Roboto, sans-serif;
+}
+
+.secondary-text,
+.card p {
+    color: var(--text-secondary);
+}
+
+a {
+    color: var(--accent);
+}
+
+body {
+    background-color: var(--background-color);
+    color: var(--text-primary);
+    height: 100vh;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.container {
+    text-align: center;
+    width: 100%;
+}
+
+h1 {
+    margin-top: 20px;
+    margin-bottom: 30px;
+}
+
+h2 {
+    margin-bottom: 20px;
+}
+
+.card-grid {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    grid-template-rows: repeat(2, 200px);
+    gap: 20px;
+    width: 100%;
+    max-width: 700px;
+    margin: 0 auto;
+    margin-bottom: 20px;
+}
+
+.card {
+    border: 2px solid var(--border-color-1);
+    border-radius: 16px;
+    background-color: var(--surface-background-2);
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    align-items: center;
+    transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.card:hover {
+    transform: translateY(-5px);
+    border-color: var(--accent-soft);
+    box-shadow: 0 0 5px var(--accent-soft);
+}
