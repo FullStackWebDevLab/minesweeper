@@ -1,0 +1,60 @@
+:root {
+    --background-color: #080f18;
+    --surface-background-1: #0f1b26;
+    --surface-background-2: #132433;
+    --border-color-1: #1c3242;
+    --accent: #0dcaf0;
+    --accent-soft: rgb(13, 202, 240);
+    --text-primary: #e6f1f7;
+    --text-secondary: #a9c0cf;
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Segoe UI", Roboto, sans-serif;
+}
+
+body {
+    background-color: var(--background-color);
+    color: var(--text-primary);
+    height: 100vh;
+}
+
+.board-container {
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.board {
+    /*
+    The '--columns' property is defined in javascript.
+    */
+    background-color: #0d1822;
+    display: grid;
+    grid-template-columns: repeat(var(--columns), 32px);
+    width: fit-content;
+    height: auto;
+    gap: 5px;
+    padding: 10px;
+    border: 2px solid var(--border-color-1);
+    border-radius: 16px;
+}
+
+.cell {
+    background-color: var(--surface-background-2);
+    aspect-ratio: 1;
+    border: 1px solid var(--border-color-1);
+    border-radius: 4px;
+    transition: all 0.15s ease;
+}
+
+.cell:hover {
+    border-color: var(--accent-soft);
+    box-shadow: 0 0 4px var(--accent-soft);
+    transform: scale(1.05);
+}
