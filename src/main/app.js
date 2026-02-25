@@ -12,11 +12,12 @@ const columnsCountByDifficulty = {
     "advanced": 32
 }
 
+// Draw the board.
 function drawBoard() {
     const cellsCount = cellsCountByDifficulty[difficulty];
     for (let i = 0; i < cellsCount; i++) {
         const cell = document.createElement("div");
-        cell.classList.add("cell");
+        cell.classList.add("cell", "closed");
         board.appendChild(cell);
     }
     
@@ -24,3 +25,13 @@ function drawBoard() {
 }
 
 drawBoard();
+
+// Detect click events in the cells.
+board.addEventListener("click", (event) => {
+    const clickedCell = event.target;
+    if (!clickedCell.classList.contains("cell") || clickedCell.classList.contains("opened")) return;
+
+    clickedCell.classList.remove("closed");
+    clickedCell.classList.add("opened");
+    console.log("Open cell.");
+});

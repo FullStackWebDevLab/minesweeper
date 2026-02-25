@@ -2,6 +2,7 @@
     --background-color: #080f18;
     --surface-background-1: #0f1b26;
     --surface-background-2: #132433;
+    --surface-background-3: #172c3d;
     --border-color-1: #1c3242;
     --accent: #0dcaf0;
     --accent-soft: rgb(13, 202, 240);
@@ -46,14 +47,21 @@ body {
 }
 
 .cell {
-    background-color: var(--surface-background-2);
     aspect-ratio: 1;
-    border: 1px solid var(--border-color-1);
-    border-radius: 4px;
     transition: all 0.15s ease;
 }
 
-.cell:hover {
+.cell.closed {
+    background-color: var(--surface-background-3);
+    border: 1px solid var(--border-color-1);
+    border-radius: 4px;
+}
+
+.cell.opened {
+    background: transparent;
+}
+
+.cell.closed:hover {
     border-color: var(--accent-soft);
     box-shadow: 0 0 4px var(--accent-soft);
     transform: scale(1.05);
