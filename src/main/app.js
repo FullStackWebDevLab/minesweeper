@@ -71,10 +71,10 @@ function initBoard() {
     Create Cell objects for each cell on the board, and draw the board
     by creating 'div' elements for each cell.
     */
-    boardElement.style.setProperty("--columns", difficulty.columnsCount);
+    boardElement.style.setProperty("--columns", difficulty.columnCount);
 
     let cell, cellElement;
-    for (let i = 0; i < difficulty.cellsCount; i++) {
+    for (let i = 0; i < difficulty.cellCount; i++) {
         cell = new Cell(i);
         boardArray.push(cell);
 
@@ -82,6 +82,8 @@ function initBoard() {
         cellElement.classList.add("cell", cell.state);
         cellElement.dataset.index = i;
         boardElement.appendChild(cellElement);
+
+        cell.element = cellElement;
     }
 }
 
@@ -99,47 +101,87 @@ function placeMines(clickedCell) {
     Shuffle the array.
     Place the mines in the first N items in the array, where N is the number of mines based on difficulty.
     */
-    console.log("Placing mines.");
 }
 
 // Classes
 class Cell {
     state = "closed"; // Can be "opened" or "closed".
-    minesCount; // Number of mines around the cell.
+    mineCount; // Number of mines around the cell.
     flagged; // Boolean indicating whether the cell is flagged.
+    element; // The HTML element representing the cell.
 
-    constructur(index) {
+    constructor(index) {
         this.index = index;
 
         // Calculate cell's row and column.
-        this.row = Math.floor(index / difficulty.columnsCount);
-        this.col = index % difficulty.columnsCount;
+        this.row = Math.floor(index / difficulty.columnCount);
+        this.col = index % difficulty.columnCount;
+
+        this.getNeighbours();
     }
     
     getNeighbours() {
-        // Calculate the indices of the neighbouring cells.
+        /*
+        Calculate the indices of the neighbouring cells.
+        index = (row * rowCount) + col
+        */
+        this.neighbours = {};
+        const rowColDelta = {
+            topLeft: [-1, -1],
+            topMid: [-1, 0],
+            topRight: [-1, 1],
+            leftMid: [0, -1],
+            rightMid: [0, 1],
+            bottomLeft: [1, -1],
+            bottomMid: [1, 0],
+            bottomRight: [1, 1]
+        };
+
+        for (const neighbour in rowColDelta) {
+            let index = this.getIndex(rowColDelta[neighbour]);
+            if (index) this.neighbours[neighbour] = index;
+        }
+    }
+
+    getIndex(delta) {
+        let newRow, newCol;
+        newRow = this.row + delta[0];
+        newCol = this.col + delta[1];
+        if (newRow < 0 ||
+            newRow > difficulty.rowCount -1 ||
+            newCol < 0 ||
+            newCol > difficulty.columnCount -1
+        ) return null;
+
+        return (newRow * difficulty.columnCount) + newCol;
+    }
+
+    open() {
+        this.state = "opened";
+        this.element.classList.remove("closed");
+        this.element.classList.add("opened");
     }
 }
 
 class Difficulty {
     constructor(difficulty) {
         if (difficulty === "beginner") {
-            this.rowsCount = 8;
-            this.columnsCount = 8;
-            this.minesCount = 10;
+            this.rowCount = 8;
+            this.columnCount = 8;
+            this.mineCount = 10;
         } else if (difficulty === "intermediate") {
-            this.rowsCount = 16;
-            this.columnsCount = 16;
-            this.minesCount = 40;
+            this.rowCount = 16;
+            this.columnCount = 16;
+            this.mineCount = 40;
         } else if (difficulty === "advanced") {
-            this.rowsCount = 30;
-            this.columnsCount = 16;
-            this.minesCount = 99;
+            this.rowCount = 30;
+            this.columnCount = 16;
+            this.mineCount = 99;
         } else {
             console.log("Invalid difficulty.");
         }
 
-        this.cellsCount = this.rowsCount * this.columnsCount;
+        this.cellCount = this.rowCount * this.columnCount;
     }
 }
 
