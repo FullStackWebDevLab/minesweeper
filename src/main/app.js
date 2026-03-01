@@ -209,6 +209,7 @@ class Cell {
 
         // Open neighbouring cells if they don't have mines.
         if (this.mineCount > 0) return;
+        this.element.innerHTML = "";
         for (const neighbourIndex of this.neighbours) {
             const neighbourCellObject = boardArray[neighbourIndex];
             neighbourCellObject.open();
