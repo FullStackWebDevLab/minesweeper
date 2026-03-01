@@ -56,12 +56,11 @@ function main() {
     // Detect click events in the cells.
     boardElement.addEventListener("click", (event) => {
         if (!event.target.classList.contains("cell")) return;
-        const clickedCell = event.target;
-        const clickedCellObject = boardArray[clickedCell.dataset.index];
+        const clickedCellObject = boardArray[event.target.dataset.index];
 
         // Place mines and count number of mines around each cell on first click.
         if (!minesPlaced) {
-            placeMines(clickedCell);
+            placeMines(clickedCellObject);
             minesPlaced = true;
 
             for (const cell of boardArray) cell.countMines();
@@ -76,7 +75,7 @@ function main() {
         */
 
         // End the game when a cell with a mine is clicked.
-        if (clickedCell.hasMine) {
+        if (clickedCellObject.hasMine) {
         }
         
         clickedCellObject.open();
@@ -104,15 +103,14 @@ function initBoard() {
     }
 }
 
-function placeMines(clickedCell) {
+function placeMines(clickedCellObject) {
     /*
     Place mines across the board.
 
     Parameters:
-        clickedCell:
-            An HTMLElement object of the first cell that was clicked.
+        clickedCellObject:
+            An instance of the Cell class representing the clicked cell.
     */
-    const clickedCellObject = boardArray[clickedCell.dataset.index];
     const excludedCellsIndices = [clickedCellObject.index];
     excludedCellsIndices.push(...clickedCellObject.neighbours)
 
