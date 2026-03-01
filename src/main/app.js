@@ -87,7 +87,6 @@ function initBoard() {
     }
 }
 
-
 function placeMines(clickedCell) {
     /*
     Place mines across the board.
@@ -96,11 +95,27 @@ function placeMines(clickedCell) {
         clickedCell:
             An HTMLElement object of the first cell that was clicked.
     */
-    /*
-    Get an array of cells that can contain a mine. Don't include the clicked cell and the cells around the clicked cell.
-    Shuffle the array.
-    Place the mines in the first N items in the array, where N is the number of mines based on difficulty.
-    */
+    const clickedCellObject = boardArray[clickedCell.dataset.index];
+    const excludedCellsIndices = [clickedCellObject.index];
+    excludedCellsIndices.push(...clickedCellObject.neighbours)
+
+    const validCellsIndices = [];
+    for (let i = 0; i < difficulty.cellCount; i++) {
+        if (excludedCellsIndices.includes(i)) continue;
+        validCellsIndices.push(i);
+    }
+
+    // Shuffle validCellsIndices using Fisher-Yates shuffle.
+    for (let i = validCellsIndices.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [validCellsIndices[i], validCellsIndices[j]] = [validCellsIndices[j], validCellsIndices[i]];
+    }
+
+    // Place mines.
+    for (let i = 0; i < difficulty.mineCount; i++) {
+        const cellIndex = validCellsIndices[i];
+        boardArray[cellIndex].hasMine = true;
+    }
 }
 
 // Classes
@@ -109,6 +124,7 @@ class Cell {
     mineCount; // Number of mines around the cell.
     flagged; // Boolean indicating whether the cell is flagged.
     element; // The HTML element representing the cell.
+    hasMine; // Boolean indicating whether the cell has a mine.
 
     constructor(index) {
         this.index = index;
@@ -117,7 +133,7 @@ class Cell {
         this.row = Math.floor(index / difficulty.columnCount);
         this.col = index % difficulty.columnCount;
 
-        this.getNeighbours();
+        this.neighbours = this.getNeighbours();
     }
     
     getNeighbours() {
@@ -125,7 +141,7 @@ class Cell {
         Calculate the indices of the neighbouring cells.
         index = (row * columnCount) + col
         */
-        this.neighbours = [];
+        const neighbours = [];
 
         for (const deltaRow of [-1, 0, 1]) {
             for (const deltaCol of [-1, 0, 1]) {
@@ -141,10 +157,12 @@ class Cell {
                     newCol < difficulty.columnCount
                 ){
                     const neighbourIndex = (newRow * difficulty.columnCount) + newCol;
-                    this.neighbours.push(neighbourIndex);
+                    neighbours.push(neighbourIndex);
                 }
             }
         }
+
+        return neighbours;
     }
 
     open() {
@@ -165,8 +183,8 @@ class Difficulty {
             this.columnCount = 16;
             this.mineCount = 40;
         } else if (difficulty === "advanced") {
-            this.rowCount = 30;
-            this.columnCount = 16;
+            this.rowCount = 16;
+            this.columnCount = 30;
             this.mineCount = 99;
         } else {
             console.log("Invalid difficulty.");
