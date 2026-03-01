@@ -49,6 +49,12 @@ body {
 .cell {
     aspect-ratio: 1;
     transition: all 0.15s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
+    font-weight: bold;
+    color: var(--accent);
 }
 
 .cell.closed {
