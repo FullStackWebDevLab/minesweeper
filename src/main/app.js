@@ -185,7 +185,7 @@ class Cell {
                     newRow < difficulty.rowCount &&
                     newCol >= 0 &&
                     newCol < difficulty.columnCount
-                ){
+                ) {
                     const neighbourIndex = (newRow * difficulty.columnCount) + newCol;
                     neighbours.push(neighbourIndex);
                 }
@@ -196,10 +196,23 @@ class Cell {
     }
 
     open() {
+        /*
+        Open the current cell and display the number of mines around it.
+        If the cell doesn't have any mines around it, open all of its neighbours.
+        */
+        if (this.state === "opened") return;
+
         this.state = "opened";
         this.element.classList.remove("closed");
         this.element.classList.add("opened");
         this.element.innerHTML = this.mineCount;
+
+        // Open neighbouring cells if they don't have mines.
+        if (this.mineCount > 0) return;
+        for (const neighbourIndex of this.neighbours) {
+            const neighbourCellObject = boardArray[neighbourIndex];
+            neighbourCellObject.open();
+        }
     }
 }
 
