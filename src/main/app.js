@@ -55,14 +55,31 @@ function main() {
 
     // Detect click events in the cells.
     boardElement.addEventListener("click", (event) => {
+        if (!event.target.classList.contains("cell")) return;
         const clickedCell = event.target;
-        if (!clickedCell.classList.contains("cell")) return;
+        const clickedCellObject = boardArray[clickedCell.dataset.index];
 
-        // Place mines on first click.
+        // Place mines and count number of mines around each cell on first click.
         if (!minesPlaced) {
             placeMines(clickedCell);
             minesPlaced = true;
+
+            for (const cell of boardArray) cell.countMines();
         }
+
+        /*
+        For each click:
+            + Check if the cell has a mine.
+            + If it has a mine, end the game.
+            + If it doesn't have a mine, open the cell and display the number of mines around the cell.
+            + If the cell doesn't have any mines around it, open all its neighbours.
+        */
+
+        // End the game when a cell with a mine is clicked.
+        if (clickedCell.hasMine) {
+        }
+        
+        clickedCellObject.open();
     });
 }
 
@@ -141,6 +158,15 @@ class Cell {
 
         this.neighbours = this.getNeighbours();
     }
+
+    countMines() {
+        // Count the number of mines around the cell.
+        this.mineCount = 0;
+        for (const index of this.neighbours) {
+            const neighbourCell = boardArray[index];
+            if (neighbourCell.hasMine) this.mineCount++;
+        }
+    }
     
     getNeighbours() {
         /*
@@ -175,6 +201,7 @@ class Cell {
         this.state = "opened";
         this.element.classList.remove("closed");
         this.element.classList.add("opened");
+        this.element.innerHTML = this.mineCount;
     }
 }
 
