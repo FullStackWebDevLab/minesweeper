@@ -46,6 +46,7 @@ When the user double clicks on a cell:
 const boardArray = []; // Array representation of the board.
 const boardElement = document.querySelector(".board");
 let minesPlaced = false;
+let openedCellsCount = 0;
 
 function main() {
     const searchParams = new URLSearchParams(window.location.search);
@@ -66,19 +67,17 @@ function main() {
             for (const cell of boardArray) cell.countMines();
         }
 
-        /*
-        For each click:
-            + Check if the cell has a mine.
-            + If it has a mine, end the game.
-            + If it doesn't have a mine, open the cell and display the number of mines around the cell.
-            + If the cell doesn't have any mines around it, open all its neighbours.
-        */
-
         // End the game when a cell with a mine is clicked.
         if (clickedCellObject.hasMine) {
+            endGame();
         }
         
         clickedCellObject.openCellAndNeighbours();
+
+        // Check if the game is won.
+        if (openedCellsCount === difficulty.safeCellsCount) {
+            console.log("Win");
+        }
     });
 
     // Detect when a cell is right-clicked.
@@ -90,6 +89,11 @@ function main() {
 
         clickedCellObject.toggleFlag();
     });
+}
+
+function endGame() {
+    // Display the location of all the mines.
+    window.location.href = "../select_difficulty/index.html";
 }
 
 function initBoard() {
@@ -227,7 +231,7 @@ class Cell {
         */
         if (this.state === "opened") return;
 
-        this.state = "opened";
+        this.state = "opened"; openedCellsCount++;
         this.element.classList.remove("closed");
         this.element.classList.add("opened");
         this.element.innerHTML = this.mineCount;
@@ -261,6 +265,7 @@ class Difficulty {
         }
 
         this.cellCount = this.rowCount * this.columnCount;
+        this.safeCellsCount = this.cellCount - this.mineCount;
     }
 }
 
