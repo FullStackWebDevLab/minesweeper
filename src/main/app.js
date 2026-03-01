@@ -53,7 +53,7 @@ function main() {
 
     initBoard();
 
-    // Detect click events in the cells.
+    // Detect when a cell is left-clicked.
     boardElement.addEventListener("click", (event) => {
         if (!event.target.classList.contains("cell")) return;
         const clickedCellObject = boardArray[event.target.dataset.index];
@@ -78,7 +78,17 @@ function main() {
         if (clickedCellObject.hasMine) {
         }
         
-        clickedCellObject.open();
+        clickedCellObject.openCellAndNeighbours();
+    });
+
+    // Detect when a cell is right-clicked.
+    boardElement.addEventListener("contextmenu", (event) => {
+        event.preventDefault();
+        const clickedCell = event.target.closest(".cell");
+        if (!clickedCell) return;
+        const clickedCellObject = boardArray[clickedCell.dataset.index];
+
+        clickedCellObject.toggleFlag();
     });
 }
 
@@ -165,6 +175,23 @@ class Cell {
             if (neighbourCell.hasMine) this.mineCount++;
         }
     }
+
+    toggleFlag() {
+        if (this.state === "opened") return;
+
+        if (this.flagged) {
+            console.log("Remove flag.")
+            this.flagged = false;
+            this.element.classList.remove("flagged");
+            this.element.innerHTML = "";
+        } else {
+            console.log("Plant flag.");
+            this.flagged = true;
+            this.element.classList.add("flagged");
+            this.element.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-flag-triangle-left-icon lucide-flag-triangle-left"><path d="M18 22V2.8a.8.8 0 0 0-1.17-.71L5.45 7.78a.8.8 0 0 0 0 1.44L18 15.5"/></svg>'
+        }
+
+    }
     
     getNeighbours() {
         /*
@@ -195,7 +222,7 @@ class Cell {
         return neighbours;
     }
 
-    open() {
+    openCellAndNeighbours() {
         /*
         Open the current cell and display the number of mines around it.
         If the cell doesn't have any mines around it, open all of its neighbours.
@@ -212,7 +239,7 @@ class Cell {
         this.element.innerHTML = "";
         for (const neighbourIndex of this.neighbours) {
             const neighbourCellObject = boardArray[neighbourIndex];
-            neighbourCellObject.open();
+            neighbourCellObject.openCellAndNeighbours();
         }
     }
 }
