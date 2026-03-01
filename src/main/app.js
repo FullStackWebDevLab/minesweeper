@@ -123,37 +123,28 @@ class Cell {
     getNeighbours() {
         /*
         Calculate the indices of the neighbouring cells.
-        index = (row * rowCount) + col
+        index = (row * columnCount) + col
         */
-        this.neighbours = {};
-        const rowColDelta = {
-            topLeft: [-1, -1],
-            topMid: [-1, 0],
-            topRight: [-1, 1],
-            leftMid: [0, -1],
-            rightMid: [0, 1],
-            bottomLeft: [1, -1],
-            bottomMid: [1, 0],
-            bottomRight: [1, 1]
-        };
+        this.neighbours = [];
 
-        for (const neighbour in rowColDelta) {
-            let index = this.getIndex(rowColDelta[neighbour]);
-            if (index) this.neighbours[neighbour] = index;
+        for (const deltaRow of [-1, 0, 1]) {
+            for (const deltaCol of [-1, 0, 1]) {
+                if (deltaRow === 0 & deltaCol === 0) continue;
+                
+                const newRow = this.row + deltaRow;
+                const newCol = this.col + deltaCol;
+
+                if (
+                    newRow >= 0 &&
+                    newRow < difficulty.rowCount &&
+                    newCol >= 0 &&
+                    newCol < difficulty.columnCount
+                ){
+                    const neighbourIndex = (newRow * difficulty.columnCount) + newCol;
+                    this.neighbours.push(neighbourIndex);
+                }
+            }
         }
-    }
-
-    getIndex(delta) {
-        let newRow, newCol;
-        newRow = this.row + delta[0];
-        newCol = this.col + delta[1];
-        if (newRow < 0 ||
-            newRow > difficulty.rowCount -1 ||
-            newCol < 0 ||
-            newCol > difficulty.columnCount -1
-        ) return null;
-
-        return (newRow * difficulty.columnCount) + newCol;
     }
 
     open() {
