@@ -84,6 +84,7 @@ function main() {
         // Check if the game is won.
         if (openedCellsCount === difficulty.safeCellsCount) {
             console.log("Win");
+            clearInterval(timerId);
         }
     });
 
