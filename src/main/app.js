@@ -47,6 +47,9 @@ const boardArray = []; // Array representation of the board.
 const boardElement = document.querySelector(".board");
 let minesPlaced = false;
 let openedCellsCount = 0;
+let timerId;
+let seconds = 0;
+const timePassedElement = document.getElementById("timePassed");
 
 function main() {
     const searchParams = new URLSearchParams(window.location.search);
@@ -59,8 +62,12 @@ function main() {
         if (!event.target.classList.contains("cell")) return;
         const clickedCellObject = boardArray[event.target.dataset.index];
 
-        // Place mines and count number of mines around each cell on first click.
+        /*
+        Start timer, place mines, and count number of mines around each cell
+        on first click.
+        */
         if (!minesPlaced) {
+            startTimer();
             placeMines(clickedCellObject);
             minesPlaced = true;
 
@@ -151,6 +158,14 @@ function placeMines(clickedCellObject) {
         const cellIndex = validCellsIndices[i];
         boardArray[cellIndex].hasMine = true;
     }
+}
+
+function startTimer() {
+    timerId = setInterval(() => {
+        if (seconds === 999) return;
+        seconds++;
+        timePassedElement.innerHTML = seconds.toString().padStart(3, "0");
+    }, 1000);
 }
 
 // Classes
