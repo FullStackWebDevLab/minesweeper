@@ -50,6 +50,23 @@ let openedCellsCount = 0;
 let timerId;
 let seconds = 0;
 const timePassedElement = document.getElementById("timePassed");
+const winModal = document.getElementById("winModal");
+const timeTakenToWinElement = document.getElementById("timeTaken");
+
+// Make the game play itself when space is pressed for quick testing.
+window.addEventListener("keydown", (event) => {
+    if (event.key === " ") {
+        for (const cell of boardArray) {
+            if (!cell.hasMine) cell.openCellAndNeighbours();
+        }
+
+        // Check if the game is won.
+        if (openedCellsCount === difficulty.safeCellsCount) {
+            clearInterval(timerId);
+            showWinModal();
+        }
+    }
+});
 
 function main() {
     const searchParams = new URLSearchParams(window.location.search);
@@ -83,8 +100,8 @@ function main() {
 
         // Check if the game is won.
         if (openedCellsCount === difficulty.safeCellsCount) {
-            console.log("Win");
             clearInterval(timerId);
+            showWinModal();
         }
     });
 
@@ -98,6 +115,7 @@ function main() {
         clickedCellObject.toggleFlag();
     });
 }
+
 
 function endGame() {
     // Display the location of all the mines.
@@ -159,6 +177,11 @@ function placeMines(clickedCellObject) {
         const cellIndex = validCellsIndices[i];
         boardArray[cellIndex].hasMine = true;
     }
+}
+
+function showWinModal() {
+    winModal.classList.remove("hidden");
+    timeTakenToWinElement.innerHTML = seconds;
 }
 
 function startTimer() {
