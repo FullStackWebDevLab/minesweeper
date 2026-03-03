@@ -5,6 +5,7 @@
     --surface-background-3: #172c3d;
     --border-color-1: #1c3242;
     --accent: #0dcaf0;
+    --accent-hover: #2dd6f5;
     --accent-soft: rgb(13, 202, 240);
     --text-primary: #e6f1f7;
     --text-secondary: #a9c0cf;
@@ -150,22 +151,38 @@ body {
     margin-bottom: 1.5rem;
 }
 
-.try-again-button {
+.win-modal-content button {
     width: 90%;
     height: 3rem;
-    border: 1px solid var(--accent);
+    border: 2px solid;
     border-radius: 8px;
-    background-color: transparent;
-    color: var(--accent);
     font-weight: bold;
     font-size: 1.15rem;
     letter-spacing: 1px;
 }
 
-.try-again-button:hover {
-    cursor: pointer;
+.play-again-button {
+    border-color: var(--acent);
     background-color: var(--accent);
     color: #06202a;
+    margin-bottom: 1rem;
+}
+
+.play-again-button:hover {
+    cursor: pointer;
+    background-color: var(--accent-hover);
+    color: #06202a;
+}
+
+button.change-difficulty {
+    background-color: transparent;
+    border-color: transparent;
+    color: var(--text-secondary);
+}
+
+button.change-difficulty:hover {
+    border-color: var(--text-secondary);
+    cursor: pointer;
 }
 
 .hidden {
