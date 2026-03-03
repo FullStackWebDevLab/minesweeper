@@ -53,6 +53,7 @@ const timePassedElement = document.getElementById("timePassed");
 const winModal = document.getElementById("winModal");
 const timeTakenToWinElement = document.getElementById("timeTaken");
 const playAgainButton = document.querySelector(".play-again-button");
+const changeDifficultyButton = document.querySelector(".change-difficulty");
 
 // Make the game play itself when space is pressed for quick testing.
 window.addEventListener("keydown", (event) => {
@@ -116,7 +117,8 @@ function main() {
         clickedCellObject.toggleFlag();
     });
 
-    playAgainButton.addEventListener("click", event => { window.location.reload() ; });
+    playAgainButton.addEventListener("click", () => { window.location.reload() ; });
+    changeDifficultyButton.addEventListener("click", () => { window.location.href = "../select_difficulty/index.html"; });
 }
 
 
