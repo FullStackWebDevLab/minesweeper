@@ -163,6 +163,51 @@ body {
     letter-spacing: 1px;
 }
 
+.lost-modal-container {
+    position: fixed;
+    inset: 0;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(6px);
+    z-index: 1000;
+}
+
+.lost-modal {
+    background-color: var(--surface-background-2);
+    border: 2px solid var(--border-color-1);
+    border-radius: 16px;
+    width: 90%;
+    max-width: 400px;
+    padding: 48px 40px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+}
+
+.lost-modal-content {
+    text-align: center;
+    width: 100%;
+}
+
+.lost-modal-content h1 {
+    color: var(--danger);
+    margin-bottom: 1.5rem;
+}
+
+.lost-modal-content label { margin-bottom: 1.5rem; }
+
+.lost-modal-content button {
+    width: 90%;
+    height: 3rem;
+    border: 2px solid;
+    border-radius: 8px;
+    font-weight: bold;
+    font-size: 1.15rem;
+    letter-spacing: 1px;
+}
+
 .play-again-button {
     border-color: var(--acent);
     background-color: var(--accent);

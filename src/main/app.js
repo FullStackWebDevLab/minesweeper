@@ -52,9 +52,10 @@ let seconds = 0;
 const timePassedElement = document.getElementById("timePassed");
 const remainingFlagsElement = document.querySelector(".remaining-flags");
 const winModal = document.getElementById("winModal");
+const lostModal = document.getElementById("lostModal");
 const timeTakenToWinElement = document.getElementById("timeTaken");
-const playAgainButton = document.querySelector(".play-again-button");
-const changeDifficultyButton = document.querySelector(".change-difficulty");
+const playAgainButtons = document.querySelectorAll(".play-again-button");
+const changeDifficultyButtons = document.querySelectorAll(".change-difficulty");
 let remainingFlagsCount;
 
 // Make the game play itself when space is pressed for quick testing.
@@ -122,8 +123,9 @@ function main() {
         clickedCellObject.flagged ? decrementDisplayedRemainingFlagsCount() : incrementDisplayedRemainingFlagsCount();
     });
 
-    playAgainButton.addEventListener("click", () => { window.location.reload() ; });
-    changeDifficultyButton.addEventListener("click", () => { window.location.href = "../select_difficulty/index.html"; });
+    
+    for (const playAgainButton of playAgainButtons) playAgainButton.addEventListener("click", () => { window.location.reload() ; });
+    for (const changeDifficultyButton of changeDifficultyButtons) changeDifficultyButton.addEventListener("click", () => { window.location.href = "../select_difficulty/index.html"; });
 }
 
 function decrementDisplayedRemainingFlagsCount() {
@@ -131,11 +133,11 @@ function decrementDisplayedRemainingFlagsCount() {
     remainingFlagsElement.innerHTML = remainingFlagsCount.toString().padStart(2, "0");
 }
 
-
 function endGame() {
     // Display the location of all the mines.
     for (cell of boardArray) cell.hasMine ? cell.showMine() : {} ;
     clearInterval(timerId);
+    lostModal.classList.remove("hidden");
 }
 
 function incrementDisplayedRemainingFlagsCount() {
