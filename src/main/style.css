@@ -102,6 +102,8 @@ body {
     color: var(--accent);
 }
 
+.cell.opened.mine { color: var(--danger); }
+
 .cell.closed:hover {
     border-color: var(--accent-soft);
     box-shadow: 0 0 4px var(--accent-soft);

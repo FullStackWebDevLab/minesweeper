@@ -50,10 +50,12 @@ let openedCellsCount = 0;
 let timerId;
 let seconds = 0;
 const timePassedElement = document.getElementById("timePassed");
+const remainingFlagsElement = document.querySelector(".remaining-flags");
 const winModal = document.getElementById("winModal");
 const timeTakenToWinElement = document.getElementById("timeTaken");
 const playAgainButton = document.querySelector(".play-again-button");
 const changeDifficultyButton = document.querySelector(".change-difficulty");
+let remainingFlagsCount;
 
 // Make the game play itself when space is pressed for quick testing.
 window.addEventListener("keydown", (event) => {
@@ -73,6 +75,8 @@ window.addEventListener("keydown", (event) => {
 function main() {
     const searchParams = new URLSearchParams(window.location.search);
     globalThis.difficulty = new Difficulty(searchParams.get("difficulty"));
+    remainingFlagsCount = difficulty.mineCount
+    remainingFlagsElement.innerHTML = remainingFlagsCount.toString().padStart(2, "0");
 
     initBoard();
 
@@ -115,16 +119,28 @@ function main() {
         const clickedCellObject = boardArray[clickedCell.dataset.index];
 
         clickedCellObject.toggleFlag();
+        clickedCellObject.flagged ? decrementDisplayedRemainingFlagsCount() : incrementDisplayedRemainingFlagsCount();
     });
 
     playAgainButton.addEventListener("click", () => { window.location.reload() ; });
     changeDifficultyButton.addEventListener("click", () => { window.location.href = "../select_difficulty/index.html"; });
 }
 
+function decrementDisplayedRemainingFlagsCount() {
+    remainingFlagsCount--;
+    remainingFlagsElement.innerHTML = remainingFlagsCount.toString().padStart(2, "0");
+}
+
 
 function endGame() {
     // Display the location of all the mines.
-    window.location.href = "../select_difficulty/index.html";
+    for (cell of boardArray) cell.hasMine ? cell.showMine() : {} ;
+    clearInterval(timerId);
+}
+
+function incrementDisplayedRemainingFlagsCount() {
+    remainingFlagsCount++;
+    remainingFlagsElement.innerHTML = remainingFlagsCount.toString().padStart(2, "0");
 }
 
 function initBoard() {
@@ -201,7 +217,7 @@ function startTimer() {
 class Cell {
     state = "closed"; // Can be "opened" or "closed".
     mineCount; // Number of mines around the cell.
-    flagged; // Boolean indicating whether the cell is flagged.
+    flagged = false; // Boolean indicating whether the cell is flagged.
     element; // The HTML element representing the cell.
     hasMine; // Boolean indicating whether the cell has a mine.
 
@@ -236,7 +252,8 @@ class Cell {
             this.element.classList.add("flagged");
             this.element.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-flag-triangle-left-icon lucide-flag-triangle-left"><path d="M18 22V2.8a.8.8 0 0 0-1.17-.71L5.45 7.78a.8.8 0 0 0 0 1.44L18 15.5"/></svg>'
         }
-
+        
+        return this.flagged;
     }
     
     getNeighbours() {
@@ -287,6 +304,14 @@ class Cell {
             const neighbourCellObject = boardArray[neighbourIndex];
             neighbourCellObject.openCellAndNeighbours();
         }
+    }
+
+    showMine() {
+        // Open the cell and display a mine on it.
+        this.state = "opened";
+        this.element.classList.remove("closed");
+        this.element.classList.add("opened", "mine");
+        this.element.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-bomb-icon lucide-bomb"><circle cx="11" cy="13" r="9"/><path d="M14.35 4.65 16.3 2.7a2.41 2.41 0 0 1 3.4 0l1.6 1.6a2.4 2.4 0 0 1 0 3.4l-1.95 1.95"/><path d="m22 2-1.5 1.5"/></svg>'
     }
 }
 
