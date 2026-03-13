@@ -50,7 +50,7 @@ When the user right-clicks on a cell:
 When the user double clicks on a cell:
     + Open all cells that are not flagged around that cell.
 */
-const boardArray = []; // Array representation of the board.
+const board = []; // Array representation of the board.
 const boardElement = document.querySelector(".board");
 let minesPlaced = false;
 let openedCellsCount = 0;
@@ -68,7 +68,7 @@ let remainingFlagsCount;
 // Make the game play itself when space is pressed for quick testing.
 window.addEventListener("keydown", (event) => {
     if (event.key === " ") {
-        for (const cell of boardArray) {
+        for (const cell of board) {
             if (!cell.hasMine) cell.openCellAndNeighbours();
         }
 
@@ -91,13 +91,13 @@ function main() {
     boardElement.style.setProperty("--columns", difficulty.columnCount);
     for (let i = 0; i < difficulty.cellCount; i++) {
         let cell = new Cell(i);
-        boardArray.push(cell);
+        board.push(cell);
     }
 
     // Detect when a cell is left-clicked.
     boardElement.addEventListener("click", (event) => {
         if (!event.target.classList.contains("cell")) return;
-        const clickedCellObject = boardArray[event.target.dataset.index];
+        const clickedCellObject = board[event.target.dataset.index];
 
         /*
         Start timer, place mines, and count number of mines around each cell
@@ -108,7 +108,8 @@ function main() {
             placeMines(clickedCellObject);
             minesPlaced = true;
 
-            for (const cell of boardArray) cell.countMines();
+            for (const cell of board) cell.countMines();
+
         }
 
         // End the game when a cell with a mine is clicked.
@@ -117,6 +118,7 @@ function main() {
         }
         
         clickedCellObject.openCellAndNeighbours();
+        solve();
 
         // Check if the game is won.
         if (openedCellsCount === difficulty.safeCellsCount) {
@@ -130,7 +132,7 @@ function main() {
         event.preventDefault();
         const clickedCell = event.target.closest(".cell");
         if (!clickedCell) return;
-        const clickedCellObject = boardArray[clickedCell.dataset.index];
+        const clickedCellObject = board[clickedCell.dataset.index];
 
         clickedCellObject.toggleFlag();
         clickedCellObject.flagged ? decrementDisplayedRemainingFlagsCount() : incrementDisplayedRemainingFlagsCount();
@@ -148,7 +150,7 @@ function decrementDisplayedRemainingFlagsCount() {
 
 function endGame() {
     // Display the location of all the mines.
-    for (cell of boardArray) cell.hasMine ? cell.showMine() : {} ;
+    for (cell of board) cell.hasMine ? cell.showMine() : {} ;
     clearInterval(timerId);
     lostModal.classList.remove("hidden");
 }
@@ -190,7 +192,7 @@ function placeMines(clickedCellObject) {
     // Place mines.
     for (let i = 0; i < difficulty.mineCount; i++) {
         const cellIndex = validCellsIndices[i];
-        boardArray[cellIndex].hasMine = true;
+        board[cellIndex].hasMine = true;
     }
 }
 
@@ -205,6 +207,71 @@ function startTimer() {
         seconds++;
         timePassedElement.innerHTML = seconds.toString().padStart(3, "0");
     }, 1000);
+}
+
+// Solver
+function solve() {
+    buildConstraints();
+}
+
+/**
+ * Builds and returns a list of constraints from the current board state.
+ *
+ * A constraint object has this shape:
+ *   {
+ *     variables: Set of cell indices,  // the unknown covered cells
+ *     mineCount: number,               // how many must be mines
+ *   }
+ *
+ * Flagged cells are treated as confirmed mines and subtracted from the count
+ * before the constraint is stored.
+ */
+function buildConstraints() {
+    const constraints = [];
+
+    for (const cell of board) {
+        // Skip closed cells and cells without mines around them.
+        if (cell.state === "closed" || cell.mineCount === 0) continue;
+
+        const closedNeighbours = new Set();
+        let remainingMines = cell.mineCount;
+
+        for (const neighbourIndex of cell.neighbours) {
+            const neighbour = board[neighbourIndex];
+
+            // Don't include flagged and opened neighbours in 'closedNeighbours'.
+            if (neighbour.state === "opened") continue;
+            if (neighbour.flagged) { remainingMines--; continue; }
+
+            closedNeighbours.add(neighbourIndex);
+        }
+
+        // Only add the constraint if there are still unknown variables.
+        if (closedNeighbours.size > 0 && remainingMines >= 0) {
+            constraints.push({
+                variables: closedNeighbours,
+                mineCount: remainingMines
+            });
+        }
+    }
+
+    return constraints;
+}
+
+/**
+ * Applies two deterministic rules repeatedly until no progress is made.
+ *
+ * ALL-MINE RULE:
+ *   If a constraint has N variables and mineCount === N,
+ *   then every variable in that constraint must be a mine.
+ *
+ * ALL-SAFE RULE:
+ *   If a constraint has mineCount === 0,
+ *   then every variable in that constraint must be safe.
+ *
+ * Returns a list of remaining constraints.
+ */
+function simplifyConstraints() {
 }
 
 // Classes
@@ -235,7 +302,7 @@ class Cell {
         // Count the number of mines around the cell.
         this.mineCount = 0;
         for (const index of this.neighbours) {
-            const neighbourCell = boardArray[index];
+            const neighbourCell = board[index];
             if (neighbourCell.hasMine) this.mineCount++;
         }
     }
@@ -301,7 +368,7 @@ class Cell {
         if (this.mineCount > 0) return;
         this.element.innerHTML = "";
         for (const neighbourIndex of this.neighbours) {
-            const neighbourCellObject = boardArray[neighbourIndex];
+            const neighbourCellObject = board[neighbourIndex];
             neighbourCellObject.openCellAndNeighbours();
         }
     }
