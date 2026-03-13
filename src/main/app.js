@@ -5,6 +5,13 @@ Represent the board as an array. Have a cell object. This object will contain al
 When creating the cells, have a `data-id` html attribute that contains the id of the cell starting from 0. This
 id will be the cell's index in the array.
 
+# New Board Representation
+
+Represent the board as an array of Cell objects. A Cell object will contain all the information about a cell, and
+will also have functions for interacting with the cell (e.g. getting the neighbours, opening and flagging the cell, etc).
+The position/index of the Cell objects in the array should match the position of the cell on the grid. The topleft cell
+should be at index 0 and the bottomright cell should be the last element in the Array.
+
 Init board:
     + Create an array with all the Cell objects.
 
@@ -76,10 +83,16 @@ window.addEventListener("keydown", (event) => {
 function main() {
     const searchParams = new URLSearchParams(window.location.search);
     globalThis.difficulty = new Difficulty(searchParams.get("difficulty"));
-    remainingFlagsCount = difficulty.mineCount
-    remainingFlagsElement.innerHTML = remainingFlagsCount.toString().padStart(2, "0");
 
-    initBoard();
+    // Display remaining flags count.
+    remainingFlagsElement.innerHTML = difficulty.mineCount.toString().padStart(2, "0");
+
+    // Initiate the board.
+    boardElement.style.setProperty("--columns", difficulty.columnCount);
+    for (let i = 0; i < difficulty.cellCount; i++) {
+        let cell = new Cell(i);
+        boardArray.push(cell);
+    }
 
     // Detect when a cell is left-clicked.
     boardElement.addEventListener("click", (event) => {
@@ -145,27 +158,6 @@ function incrementDisplayedRemainingFlagsCount() {
     remainingFlagsElement.innerHTML = remainingFlagsCount.toString().padStart(2, "0");
 }
 
-function initBoard() {
-    /*
-    Create Cell objects for each cell on the board, and draw the board
-    by creating 'div' elements for each cell.
-    */
-    boardElement.style.setProperty("--columns", difficulty.columnCount);
-
-    let cell, cellElement;
-    for (let i = 0; i < difficulty.cellCount; i++) {
-        cell = new Cell(i);
-        boardArray.push(cell);
-
-        cellElement = document.createElement("div");
-        cellElement.classList.add("cell", cell.state);
-        cellElement.dataset.index = i;
-        boardElement.appendChild(cellElement);
-
-        cell.element = cellElement;
-    }
-}
-
 function placeMines(clickedCellObject) {
     /*
     Place mines across the board.
@@ -225,6 +217,12 @@ class Cell {
 
     constructor(index) {
         this.index = index;
+
+        // Create cell HTML element.
+        this.element = document.createElement("div");
+        this.element.classList.add("cell", this.state);
+        this.element.dataset.index = this.index;
+        boardElement.appendChild(this.element);
 
         // Calculate cell's row and column.
         this.row = Math.floor(index / difficulty.columnCount);
