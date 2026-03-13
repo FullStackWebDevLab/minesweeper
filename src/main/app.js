@@ -211,67 +211,156 @@ function startTimer() {
 
 // Solver
 function solve() {
-    buildConstraints();
+    let constraints;
+    constraints = buildConstraints();
+    constraints = simplifyConstraints(constraints);
 }
 
 /**
- * Builds and returns a list of constraints from the current board state.
- *
- * A constraint object has this shape:
- *   {
- *     variables: Set of cell indices,  // the unknown covered cells
- *     mineCount: number,               // how many must be mines
- *   }
- *
- * Flagged cells are treated as confirmed mines and subtracted from the count
- * before the constraint is stored.
- */
+    * Builds and returns a list of constraints from the current board state.
+    *
+    * A constraint object has this shape:
+    *   {
+    *     variables: Set of cell indices,  // the unknown covered cells
+    *     mineCount: number,               // how many must be mines
+    *   }
+    *
+    * Flagged cells are treated as confirmed mines and subtracted from the count
+    * before the constraint is stored.
+    */
 function buildConstraints() {
     const constraints = [];
 
     for (const cell of board) {
-        // Skip closed cells and cells without mines around them.
-        if (cell.state === "closed" || cell.mineCount === 0) continue;
-
-        const closedNeighbours = new Set();
-        let remainingMines = cell.mineCount;
-
-        for (const neighbourIndex of cell.neighbours) {
-            const neighbour = board[neighbourIndex];
-
-            // Don't include flagged and opened neighbours in 'closedNeighbours'.
-            if (neighbour.state === "opened") continue;
-            if (neighbour.flagged) { remainingMines--; continue; }
-
-            closedNeighbours.add(neighbourIndex);
-        }
-
-        // Only add the constraint if there are still unknown variables.
-        if (closedNeighbours.size > 0 && remainingMines >= 0) {
-            constraints.push({
-                variables: closedNeighbours,
-                mineCount: remainingMines
-            });
-        }
+        constraint = buildConstraintForCell(cell);
+        if (constraint !== null) constraints.push(constraint);
     }
 
     return constraints;
 }
 
 /**
- * Applies two deterministic rules repeatedly until no progress is made.
- *
- * ALL-MINE RULE:
- *   If a constraint has N variables and mineCount === N,
- *   then every variable in that constraint must be a mine.
- *
- * ALL-SAFE RULE:
- *   If a constraint has mineCount === 0,
- *   then every variable in that constraint must be safe.
- *
- * Returns a list of remaining constraints.
- */
-function simplifyConstraints() {
+    * Build and return a constraint for a single opened cell.
+    * Return null if the cell is closed or if it doesn't have mines around it.
+    */
+function buildConstraintForCell(cell) {
+    // Return null if the cell is not opened or if it doesn't have mines around it.
+    if (cell.state === "closed" || cell.mineCount === 0) return null;
+
+    const closedNeighbours = new Set();
+    let remainingMines = cell.mineCount;
+
+    for (const neighbourIndex of cell.neighbours) {
+        const neighbour = board[neighbourIndex];
+
+        // Don't include flagged and opened neighbours in 'closedNeighbours'.
+        if (neighbour.state === "opened") continue;
+        if (neighbour.flagged) { remainingMines--; continue; }
+
+        closedNeighbours.add(neighbourIndex);
+    }
+
+    // Only add the constraint if there are still unknown variables.
+    if (closedNeighbours.size > 0 && remainingMines >= 0) {
+        return {
+            variables: closedNeighbours,
+            mineCount: remainingMines
+        };
+    }
+
+    return null;
+}
+
+/**
+    * Applies two deterministic rules repeatedly until no progress is made.
+    *
+    * ALL-MINE RULE:
+    *   If a constraint has N variables and mineCount === N,
+    *   then every variable in that constraint must be a mine.
+    *
+    * ALL-SAFE RULE:
+    *   If a constraint has mineCount === 0,
+    *   then every variable in that constraint must be safe.
+    *   
+    *   For every safe cell that is opened, a new constraint for that cell is calculated
+    *   and added to the list of constraints.
+    *
+    * Returns a list of remaining constraints.
+    */
+function simplifyConstraints(constraints) {
+    let changed = true;
+    while (changed) {
+        changed = false;
+        // const newConstraints = [];
+
+        for (const constraint of constraints) {
+            // Edit constraints modified by working on other constraints.
+            for (const index of structuredClone(constraint.variables)) {
+                const cell = board[index];
+
+                if (cell.state === "opened") {
+                    // Remove cells confirmed as safe from 'variables'.
+                    constraint.variables.delete(index);
+                    changed = true;
+                } else if (cell.flagged) {
+                    // Remove flagged cells and decrement mineCount.
+                    constraint.variables.delete(index);
+                    constraint.mineCount--;
+                    changed = true;
+                }
+            }
+
+            // ALL-MINE RULE: remaining unknowns == remaining mines needed.
+            if (constraint.variables.size === constraint.mineCount) {
+                for (const index of structuredClone(constraint.variables)) {
+                    const cell = board[index];
+                    cell.toggleFlag();
+                    changed = true;
+                }
+            }
+
+            // ALL-SAFE RULE: no mines left to place among remaining unknowns.
+            if (constraint.mineCount === 0) {
+                for (const index of structuredClone(constraint.variables)) {
+                    const cell = board[index];
+                    cell.openCellAndNeighbours();
+                    changed = true;
+
+                    /*
+                        * Build a constraint for the newly opened cell.
+                        * The neighbours of this cell will only be opened if this cell
+                        * doesn't have mines around it.
+                        * In this case, 'buildConstraintForCell' will return null.
+                        * Check if the function returns null and the cell doesn't have mines
+                        * around it.
+                        * If both are true, it means that the mines around the cell were
+                        * opened. This means that we need to build constraints for the neighbours
+                        * as well.
+                        * This won't work well when the current cell doesn't have mines, and one
+                        * or more of its neighbours also lacks mines around it.
+                        * In this situation, the neighbours of the neighbour will be opened, we'll
+                        * need to build constraints for them, but we won't know which cells to build
+                        * constraints for.
+                        * What if we build new constraints after all new cells are opened, not while
+                        * each new cell is being opened.
+                        */
+                    // Build a constraint for the newly opened cell.
+                    /*
+                    const newConstraint = buildConstraintForCell(cell);
+                    if (newConstraint !== null) newConstraints.push(newConstraint);
+                    if (newConstraint === null && cell.mineCount === 0) {}
+                    */
+                }
+            }
+        }
+    }
+
+    // Collect constraints that still have unresolved variables.
+    const remainingConstraints = constraints.filter(
+        (constraint) => constraint.variables.size > 0 && constraint.mineCount > 0
+    );
+
+    return remainingConstraints;
 }
 
 // Classes
