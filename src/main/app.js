@@ -211,9 +211,13 @@ function startTimer() {
 
 // Solver
 function solve() {
-    let constraints;
-    constraints = buildConstraints();
-    constraints = simplifyConstraints(constraints);
+    let loopCondition = true;
+    while (loopCondition) {
+        let constraints = buildConstraints();
+        console.log(constraints);
+        loopCondition = simplifyConstraints(constraints);
+        console.log(constraints);
+    }
 }
 
 /**
@@ -285,9 +289,11 @@ function buildConstraintForCell(cell) {
     *   For every safe cell that is opened, a new constraint for that cell is calculated
     *   and added to the list of constraints.
     *
-    * Returns a list of remaining constraints.
+    * Returns a boolean indicating whether any cells were opened. True if atleast one
+    * new cell was opened, false otherwise.
     */
 function simplifyConstraints(constraints) {
+    let cellOpened = false;
     let changed = true;
     while (changed) {
         changed = false;
@@ -325,42 +331,22 @@ function simplifyConstraints(constraints) {
                     const cell = board[index];
                     cell.openCellAndNeighbours();
                     changed = true;
-
-                    /*
-                        * Build a constraint for the newly opened cell.
-                        * The neighbours of this cell will only be opened if this cell
-                        * doesn't have mines around it.
-                        * In this case, 'buildConstraintForCell' will return null.
-                        * Check if the function returns null and the cell doesn't have mines
-                        * around it.
-                        * If both are true, it means that the mines around the cell were
-                        * opened. This means that we need to build constraints for the neighbours
-                        * as well.
-                        * This won't work well when the current cell doesn't have mines, and one
-                        * or more of its neighbours also lacks mines around it.
-                        * In this situation, the neighbours of the neighbour will be opened, we'll
-                        * need to build constraints for them, but we won't know which cells to build
-                        * constraints for.
-                        * What if we build new constraints after all new cells are opened, not while
-                        * each new cell is being opened.
-                        */
-                    // Build a constraint for the newly opened cell.
-                    /*
-                    const newConstraint = buildConstraintForCell(cell);
-                    if (newConstraint !== null) newConstraints.push(newConstraint);
-                    if (newConstraint === null && cell.mineCount === 0) {}
-                    */
+                    cellOpened = true;
                 }
             }
         }
     }
 
-    // Collect constraints that still have unresolved variables.
-    const remainingConstraints = constraints.filter(
-        (constraint) => constraint.variables.size > 0 && constraint.mineCount > 0
-    );
+    // Eliminate constraints with resolved variables.
+    for (let i = 0; i < constraints.length; i++) {
+        const constraint = constraints[i];
 
-    return remainingConstraints;
+        if (!(constraint.variables.size > 0 && constraint.mineCount > 0 )) {
+            constraints.splice(i, 1);
+        }
+    }
+
+    return cellOpened;
 }
 
 // Classes
