@@ -211,13 +211,14 @@ function startTimer() {
 
 // Solver
 function solve() {
+    let constraints;
     let loopCondition = true;
     while (loopCondition) {
-        let constraints = buildConstraints();
-        console.log(constraints);
+        constraints = buildConstraints();
         loopCondition = simplifyConstraints(constraints);
-        console.log(constraints);
     }
+
+    findConnectedComponents(constraints);
 }
 
 /**
@@ -274,7 +275,8 @@ function buildConstraints() {
 
     if (allVariables.size > 0 && totalRemainingMines >= 0) {
         const constraint = { variables: allVariables, mineCount: totalRemainingMines };
-        constraints.push(constraint);
+        // Skip this for now. This is to make sure that components only include frontier variables.
+        // constraints.push(constraint);
     }
 
     return constraints;
@@ -293,6 +295,11 @@ function buildConstraints() {
     *   
     *   For every safe cell that is opened, a new constraint for that cell is calculated
     *   and added to the list of constraints.
+    *
+    * The passed in array of constraints (`constraints`) will be modified in-place.
+    * When this function returns, `constraints` will contain only constraints with
+    * unresolved variables. Those constraints whose variables were resolved by the
+    * function will be removed.
     *
     * Returns a boolean indicating whether any cells were opened. True if atleast one
     * new cell was opened, false otherwise.
@@ -352,6 +359,59 @@ function simplifyConstraints(constraints) {
     }
 
     return cellOpened;
+}
+
+/**
+    * Groups frontier variables into connected components.
+    *
+    * Two variables are connected if they share at least one constraint.
+    *
+    * Returns an array of components. Each component is a set of indices.
+    * The indices map to cells in `board`.
+    */
+function findConnectedComponents(constraints) {
+    const adjacencyMap = {}; // index: Set(indices)
+
+    for (const constraint of constraints) {
+        for (const variable of constraint.variables) {
+            if (!Object.hasOwn(adjacencyMap, variable)) adjacencyMap[variable] = new Set();
+
+            for (const variable2 of constraint.variables) {
+                if (variable === variable2) continue;
+                adjacencyMap[variable].add(variable2);
+            }
+        }
+    }
+
+    // Use BFS to find connected components.
+    const visited = new Set();
+    const components = [];
+
+    Object.keys(adjacencyMap).forEach((key) => {
+        // BFS with cellIndex as the starting node.
+        cellIndex = Number(key);
+        if (visited.has(cellIndex)) return;
+
+        const component = new Set();
+        const queue = [cellIndex];
+
+        while (queue.length > 0) {
+            const current = queue.shift();
+
+            if (visited.has(current)) continue;
+            visited.add(current);
+            component.add(current);
+
+            for (const neighbourIndex of adjacencyMap[current]) {
+                if (visited.has(neighbourIndex)) continue;
+                queue.push(neighbourIndex);
+            }
+        }
+
+        components.push(component);
+    });
+
+    return components;
 }
 
 // Classes
