@@ -235,9 +235,25 @@ function solve() {
 function buildConstraints() {
     const constraints = [];
 
+    // Build constraints for valid cells (opened with at least one mine around it).
     for (const cell of board) {
         constraint = buildConstraintForCell(cell);
         if (constraint !== null) constraints.push(constraint);
+    }
+
+    // Build a constraint for the entire board.
+    let totalRemainingMines = difficulty.mineCount;
+    const allVariables = new Set();
+    for (cell of board) {
+        if (cell.state === "opened") continue;
+        if (cell.flagged) { totalRemainingMines--; continue; }
+
+        allVariables.add(cell.index);
+    }
+
+    if (allVariables.size > 0 && totalRemainingMines >= 0) {
+        const constraint = { variables: allVariables, mineCount: totalRemainingMines };
+        constraints.push(constraint);
     }
 
     return constraints;
@@ -246,6 +262,7 @@ function buildConstraints() {
 /**
     * Build and return a constraint for a single opened cell.
     * Return null if the cell is closed or if it doesn't have mines around it.
+    * Return null if the constraint is satisfied; no remaining mines and no covered and unflagged neighbours.
     */
 function buildConstraintForCell(cell) {
     // Return null if the cell is not opened or if it doesn't have mines around it.
