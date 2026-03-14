@@ -237,8 +237,29 @@ function buildConstraints() {
 
     // Build constraints for valid cells (opened with at least one mine around it).
     for (const cell of board) {
-        constraint = buildConstraintForCell(cell);
-        if (constraint !== null) constraints.push(constraint);
+        if (cell.state === "closed" || cell.mineCount === 0) continue;
+
+        const closedNeighbours = new Set();
+        let remainingMines = cell.mineCount;
+
+        for (const neighbourIndex of cell.neighbours) {
+            const neighbour = board[neighbourIndex];
+
+            // Don't include flagged and opened neighbours in 'closedNeighbours'.
+            if (neighbour.state === "opened") continue;
+            if (neighbour.flagged) { remainingMines--; continue; }
+
+            closedNeighbours.add(neighbourIndex);
+        }
+
+        // Only add the constraint if there are still unknown variables.
+        if (closedNeighbours.size > 0 && remainingMines >= 0) {
+            const constraint =  {
+                variables: closedNeighbours,
+                mineCount: remainingMines
+            };
+            constraints.push(constraint);
+        }
     }
 
     // Build a constraint for the entire board.
@@ -257,39 +278,6 @@ function buildConstraints() {
     }
 
     return constraints;
-}
-
-/**
-    * Build and return a constraint for a single opened cell.
-    * Return null if the cell is closed or if it doesn't have mines around it.
-    * Return null if the constraint is satisfied; no remaining mines and no covered and unflagged neighbours.
-    */
-function buildConstraintForCell(cell) {
-    // Return null if the cell is not opened or if it doesn't have mines around it.
-    if (cell.state === "closed" || cell.mineCount === 0) return null;
-
-    const closedNeighbours = new Set();
-    let remainingMines = cell.mineCount;
-
-    for (const neighbourIndex of cell.neighbours) {
-        const neighbour = board[neighbourIndex];
-
-        // Don't include flagged and opened neighbours in 'closedNeighbours'.
-        if (neighbour.state === "opened") continue;
-        if (neighbour.flagged) { remainingMines--; continue; }
-
-        closedNeighbours.add(neighbourIndex);
-    }
-
-    // Only add the constraint if there are still unknown variables.
-    if (closedNeighbours.size > 0 && remainingMines >= 0) {
-        return {
-            variables: closedNeighbours,
-            mineCount: remainingMines
-        };
-    }
-
-    return null;
 }
 
 /**
