@@ -543,42 +543,6 @@ function enumerateComponent(component, constraints, solutions) {
     }
 }
 
-function backtrackingEnumerator(components, constraints) {
-    let assignment;
-    const solutions = []; // Append every assignment that doesn't violate constraints.
-    for (let component of components) {
-        component = [...component]; // Convert set to array for indexing.
-        const assignments = {}; // Contains current variable assignments.
-        let currentVariableIndex = 0, currentVariable;
-        while (currentVariableIndex < component.length) {
-            currentVariable = component[currentVariableIndex];
-            const variableConstraints = getVariableConstraints(currentVariable, constraints);
-
-            // Assign 0.
-            assignment = 0;
-            if (isConsistent(assignment, assignments, variableConstraints)) {
-                solutions.push({ [currentVariable]: 0 });
-                assignments[currentVariable] = 0;
-                currentVariableIndex++;
-                continue;
-            }
-
-            // Assign 1 if 0 violates constraints.
-            assignment = 1;
-            if (isConsistent(assignment, assignments, variableConstraints)) {
-                solutions.push({ [currentVariable]: 1 });
-                assignments[currentVariable] = 1;
-                currentVariableIndex++;
-                continue;
-            }
-
-            // Backtrack if both 0 and 1 voilate constraints.
-            currentVariableIndex--;
-        }
-    }
-}
-
-
 /*
     * Return an array of constraints involving the cell with the
     * given index.
