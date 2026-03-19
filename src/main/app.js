@@ -220,7 +220,7 @@ function solve() {
 
     const components = findConnectedComponents(constraints);
 
-    backtrackingEnumerator(components, constraints);
+    enumerateAllComponents(components, constraints);
 }
 
 /**
@@ -471,7 +471,7 @@ function findConnectedComponents(constraints) {
     * still violates assignments. How will I know to not assign 0 and instead backtrack to the
     * previous variable?
     *
-    * I can start by always assigning 0 first, the 1 second. Only assign 1 if 0 violates
+    * I can start by always assigning 0 first, then 1 after. Only assign 1 if 0 violates
     * constraints. If you assign 1 and it violates constraints, it will mean that both 0 and 1
     * have violated constraints, and therefore, we should backtrack instead of assigning 0.
     *
@@ -484,6 +484,65 @@ function findConnectedComponents(constraints) {
     *
     * I am not sure but I think the component set is already in the correct order. We'll see.
     */
+function enumerateAllComponents(components, constraints) {
+    const solutions = [];
+
+    for (let component of components) {
+        component = [...component];
+        enumerateComponent(component, constraints, solutions);
+    }
+
+    console.log(`Solutions: ${solutions}`);
+}
+
+/*
+    * Recursively enumerate the given component.
+    *
+    * Parameters:
+    *   `component`: An array of connected variables.
+    *   `constraints`: An array of all constraints.
+    *   `solutions`: An array that will contain variable assignments that
+    *       don't violate constraints. Data already existing in the array
+    *       will be preserved.
+    *
+    * Returns a list of all solutions that don't violate constraints:
+    *   [ { variable: assignment }, ... ]
+    */
+function enumerateComponent(component, constraints, solutions) {
+    const assignments = {};
+
+    /*
+        * Recursive backtracking function.
+        *
+        * Parameters:
+        *   `index`: The current index in the component array.
+        */
+    function backtrack(index) {
+        // End of array. Solution found.
+        if (index === component.length) return true;
+
+        const variable = component[index];
+        const variableConstraints = getVariableConstraints(variable, constraints);
+
+        for (const assignment of [0, 1]) {
+            if (!isConsistent(assignment, assignments, variableConstraints)) continue;
+
+            assignments[variable] = assignment;
+            solutions.push({ [variable]: [assignment] });
+
+            if (backtrack(index + 1)) return true; // Solution found.
+        }
+
+        return false; // Both 0 and 1 violate constraints.
+    }
+
+    if (backtrack(0)) {
+        return;
+    } else {
+        console.log("Component solution not found.");
+    }
+}
+
 function backtrackingEnumerator(components, constraints) {
     let assignment;
     const solutions = []; // Append every assignment that doesn't violate constraints.
@@ -514,10 +573,11 @@ function backtrackingEnumerator(components, constraints) {
             }
 
             // Backtrack if both 0 and 1 voilate constraints.
-            //currentVariableIndex--;
+            currentVariableIndex--;
         }
     }
 }
+
 
 /*
     * Return an array of constraints involving the cell with the
@@ -586,9 +646,6 @@ function isConsistent(assignment, assignments, variableConstraints) {
     }
 
     return true;
-}
-
-function enumerateComponent() {
 }
 
 // Classes
