@@ -496,21 +496,19 @@ function backtrackingEnumerator(components, constraints) {
             const variableConstraints = getVariableConstraints(currentVariable, constraints);
 
             // Assign 0.
-            assignment = { [currentVariable]: 0 };
+            assignment = 0;
             if (isConsistent(assignment, assignments, variableConstraints)) {
-                solutions.push(assignment);
-
+                solutions.push({ [currentVariable]: 0 });
                 assignments[currentVariable] = 0;
                 currentVariableIndex++;
                 continue;
             }
 
             // Assign 1 if 0 violates constraints.
-            assignment = { [currentVariable]: 1 };
+            assignment = 1;
             if (isConsistent(assignment, assignments, variableConstraints)) {
-                solutions.push({currentVariable: assignment});
-
-                assignments.push({currentVariable: assignment});
+                solutions.push({ [currentVariable]: 1 });
+                assignments[currentVariable] = 1;
                 currentVariableIndex++;
                 continue;
             }
@@ -539,8 +537,7 @@ function getVariableConstraints(cellIndex, constraints) {
     * Check if an assignment to a variable violates any constraints.
     *
     * Parameters:
-    *   `assignment`: Assignment to this variable:
-    *       { variable: assignment }
+    *   `assignment`: Assignment to the variable in question (0 or 1).
     *   `assignments`: Assignments that have already been made to other
     *   variables in the same component.
     *       { variable1: assignment, variable2: assignment, ... }
@@ -550,43 +547,6 @@ function getVariableConstraints(cellIndex, constraints) {
     * Return true if the assignment doesn't violate any constraint.
     * Return false if the assignment violates any constraint.
     */
-
-/*
-    * Thought Process
-    * ================
-    * Loop through all constraints involving the assigned variable.
-    * For each constraint, loop through its variables. For each variable,
-    * check if the variable is assigned a value (in `assignments`).
-    *   If the variable is assigned a 0, remove the variable from the
-    *   list of variables in the constraint.
-    *   If the variable is assigned a 1, remove it from the list of variables
-    *   in the constraint and decrement the constraint's mineCount.
-    *
-    * Note that you should not mutate the given variable constraints,
-    * instead, create a new array of the modified variable constraints. I am
-    * not entirely sure about this. I just thought about it. Look more into it
-    * and decide accordingly.
-    *
-    * After updating the constraints, loop throught the new updated constraints
-    * and check if the assignment to the variable violates any constraint.
-    */
-/*
-function isConsistent(assignment, variableConstraints) {
-    for (const variableConstraint of variableConstraints) {
-        if (assignment === 0) {
-            // Constraint is violated if the number of remaining variables
-            // is less than the required mine count.
-            const remainingVariablesCount = variableConstraint.variables.size - 1;
-            if (remainingVariablesCount < variableConstraint.mineCount) return false;
-        } else if (assignment === 1) {
-            // Constraint is violated if `variableConstraint.mineCount` === 0.
-            if (variableConstraint.mineCount === 0) return false;
-        }
-    }
-
-    return true;
-}
-*/
 function isConsistent(assignment, assignments, variableConstraints) {
     const updatedVariableConstraints = structuredClone(variableConstraints);
 
@@ -600,14 +560,11 @@ function isConsistent(assignment, assignments, variableConstraints) {
 
             const variableAssignment = assignments[variable];
             if (variableAssignment === 0) {
-                // Remove variable from `variables` array.
-                const removeVariableIndex = updatedVariableConstraints[constraintIndex].variables.indexOf(variable);
-                updatedVariableConstraints[constraintIndex].variables.splice(removeVariableIndex, 1);
+                // Remove variable from `variables` set.
+                updatedVariableConstraints[constraintIndex].variables.delete(variable);
             } else if (variableAssignment === 1) {
-                // Remove variable from `variables` array and decrement `mineCount`.
-                const removeVariableIndex = updatedVariableConstraints[constraintIndex].variables.indexOf(variable);
-                updatedVariableConstraints[constraintIndex].variables.splice(removeVariableIndex, 1);
-                
+                // Remove variable from `variables` set and decrement `mineCount`.
+                updatedVariableConstraints[constraintIndex].variables.delete(variable);
                 updatedVariableConstraints[constraintIndex].mineCount--;
             }
         }
@@ -616,6 +573,17 @@ function isConsistent(assignment, assignments, variableConstraints) {
     }
 
     // Loop through the updated constraints and check if the new assignment violates any of them.
+    for (const constraint of updatedVariableConstraints) {
+        if (assignment === 0) {
+            // Constraint is violated if the number of remaining variables
+            // is less than the required mine count.
+            const remainingVariablesCount = constraint.variables.size - 1;
+            if (remainingVariablesCount < constraint.mineCount) return false;
+        } else if (assignment === 1) {
+            // Constraint is violated if `variableConstraint.mineCount` === 0.
+            if (constraint.mineCount === 0) return false;
+        }
+    }
 
     return true;
 }
