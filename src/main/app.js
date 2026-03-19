@@ -484,6 +484,17 @@ function findConnectedComponents(constraints) {
     *
     * I am not sure but I think the component set is already in the correct order. We'll see.
     */
+
+/*
+    * Find valid solutions for variables in the given components.
+    *
+    * Parameters:
+    *   `components`: An array of components. A component contains connected cells.
+    *   `constraints`: An array of all constraints.
+    *
+    * Returns an array of variable assignments that didn't violate any constraints.
+    *   [ {variable: assignment}, ... ]
+    */
 function enumerateAllComponents(components, constraints) {
     const solutions = [];
 
@@ -492,7 +503,7 @@ function enumerateAllComponents(components, constraints) {
         enumerateComponent(component, constraints, solutions);
     }
 
-    console.log(`Solutions: ${solutions}`);
+    return solutions;
 }
 
 /*
