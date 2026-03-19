@@ -212,15 +212,20 @@ function startTimer() {
 // Solver
 function solve() {
     let constraints;
+    /*
     let loopCondition = true;
     while (loopCondition) {
         constraints = buildConstraints();
         loopCondition = simplifyConstraints(constraints);
     }
+    */
+
+    constraints = buildConstraints();
 
     const components = findConnectedComponents(constraints);
-
-    enumerateAllComponents(components, constraints);
+    const solutions = enumerateAllComponents(components, constraints);
+    applySolutions(solutions);
+    //findFiftyFiftyPairs(solutions, components);
 }
 
 /**
@@ -539,7 +544,7 @@ function enumerateComponent(component, constraints, solutions) {
             if (!isConsistent(assignment, assignments, variableConstraints)) continue;
 
             assignments[variable] = assignment;
-            solutions.push({ [variable]: [assignment] });
+            // solutions.push({ [variable]: assignment });
 
             if (backtrack(index + 1)) return true; // Solution found.
         }
@@ -548,7 +553,7 @@ function enumerateComponent(component, constraints, solutions) {
     }
 
     if (backtrack(0)) {
-        return;
+        solutions.push(assignments);
     } else {
         console.log("Component solution not found.");
     }
@@ -621,6 +626,67 @@ function isConsistent(assignment, assignments, variableConstraints) {
     }
 
     return true;
+}
+
+/*
+    * Detect fifty-fifty pairs.
+    *
+    * Fifty-fifty pairs are detected by calculating their mine probability:
+    *   mineProbability = (number of solutions with 1 assigned to the variable) / (total number of solutions for the variable)
+    *
+    * If mineProbability is 1, the variable is definitely a mine, if 0, the
+    * variable is safe, if between 0 and 1, the variable is unknown. It may be a fifty-fifty variable.
+    */
+function findFiftyFiftyPairs(solutions, components) {
+    const mineProbabilities = {}; // Will contain mine probabilities for each variable.
+
+    /*
+        * Arrange solutions. Place all solutions for a given variable in an array.
+        * Store the array as the value, and the variable as the key. This will
+        * make it easier to get solutions and count the number of solutions for
+        * each variable.
+        */
+    newSolutions = {};
+    for (const solution of solutions) {
+        for (let key of Object.keys(solution)) {
+            key = Number(key);
+            if (!Object.hasOwn(newSolutions, key)) newSolutions[key] = [];
+            
+            newSolutions[key].push(solution[key]);
+        }
+    }
+
+    for (const component of components) {
+        for (const variable of component) {
+            const solutionsCount = newSolutions[variable].length;
+            const oneCount = newSolutions[variable].filter(item => item === 1).length;
+            const mineProbability = oneCount / solutionsCount;
+            mineProbabilities[variable] = mineProbability;
+        }
+    }
+    console.log(mineProbabilities);
+}
+
+/*
+    * Apply known solutions.
+    */
+function applySolutions(solutions) {
+    console.log("Applying solutions.");
+    console.log(solutions);
+    for (const solution of solutions) {
+        for (let cellIndex in solution) {
+            cellIndex = Number(cellIndex);
+            const value = solution[cellIndex];
+            console.log(value);
+            const cell = board[cellIndex];
+
+            if (value === 0) {
+                cell.openCellAndNeighbours();
+            } else if (value === 1) {
+                cell.toggleFlag();
+            }
+        }
+    }
 }
 
 // Classes
