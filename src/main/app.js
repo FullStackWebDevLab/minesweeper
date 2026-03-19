@@ -218,7 +218,9 @@ function solve() {
         loopCondition = simplifyConstraints(constraints);
     }
 
-    findConnectedComponents(constraints);
+    const components = findConnectedComponents(constraints);
+
+    backtrackingEnumerator(components, constraints);
 }
 
 /**
@@ -412,6 +414,213 @@ function findConnectedComponents(constraints) {
     });
 
     return components;
+}
+
+/*
+    * The variable 'components' is an array of sets. Each set contains indices of
+    * variables that are connected. Each set is a component.
+    *
+    * Loop through `components` and enumerate each component.
+    * For each component, loop through it's variables.
+    * Starting from the first variable, assign it a value, 0 (safe) or 1 (mine).
+    * Check if any constraint involving the assigned variable is violated.
+    * A constraint is violated if:
+    *   The number of mines assigned exceed the number of mines that should exist
+    *   (this means the cell is flagged incorrectly, and should be opened instead).
+    *   The number of closed, unflagged variables is less than the number of mines
+    *   that should exist (this means the cell is opened and should be flagged).
+    * If a constraint is violated, for example when 0 was assigned, remove the 0 and
+    * assign 1 instead. Then check if any constraint is violated.
+    * If no constraint is violated, move on to the next variable in the component.
+    * If a constraint is violated in both assignments (0 and 1), go back to the previous
+    * variable (backtrack), and change it's assignment.
+    *
+    * Every time a variable is assigned, check all constraints involving the assigned
+    * variable. If both assignments violate constraints, backtrack.
+    *
+    * # Store Valid Assignments -------------------------------------------------------
+    *
+    * When an assignment doesn't violate a constraint, store that assignment.
+    * Store the assignment in an array. The array will contain objects. Each object will
+    * have the index of the cell as the key, and the assignemnt (0 or 1) as the value.
+    *
+    * # Detecting Multiple Solutions ---------------------------------------------------
+    *
+    * What if both assignments (0 or 1) don't violate any constraints (50/50 situation)?
+    * To handle this situation, after looping through every element of the component,
+    * backtrack and change the assignment of the variable, is the assignment violates a
+    * constraint, backtrack. Keep backtracking until you find a variable which doesn't
+    * violate any constraint even after changing it's assignment. Store both assignments.
+    * It is important to store both assignments to be able to detect 50/50 situations later.
+    *
+    * After storing the assignment, continue to the next variable in the component until
+    * you reach the end again. Then start backtracking. You'll get to this first variable
+    * where changing the assignment doesn't violate any constraints, skip it and keep
+    * backtracking. You may find another variable that can have both assignments. If this
+    * happens, store the assignment and keep going forward until you reach the end, then
+    * start backtracking again.
+    *
+    * Do this until you reach to the beginning of the array/set, then stop and return
+    * the array of solutions.
+    *
+    * # Tracking Assignments -------------------------------------------------------------
+    *
+    * How will I keep track of what I've already assigned to which variable? If I don't
+    * keep track, I can assign say 0 to a certain variable, check if it violates any constraints,
+    * find out it does violate constraints, then switch the assignment to 1, then find out it
+    * still violates assignments. How will I know to not assign 0 and instead backtrack to the
+    * previous variable?
+    *
+    * I can start by always assigning 0 first, the 1 second. Only assign 1 if 0 violates
+    * constraints. If you assign 1 and it violates constraints, it will mean that both 0 and 1
+    * have violated constraints, and therefore, we should backtrack instead of assigning 0.
+    *
+    * # Component Set Order -----------------------------------------------------------------
+    *
+    * I think the order of the components in the set matters. The order in which the variables
+    * are looped through matters. The variable in the next iteration should be directly linked
+    * to the variable in the current iteration by at least one constraint. The assignment of
+    * the current variable should immediately affect the variable in the next iteration.
+    *
+    * I am not sure but I think the component set is already in the correct order. We'll see.
+    */
+function backtrackingEnumerator(components, constraints) {
+    let assignment;
+    const solutions = []; // Append every assignment that doesn't violate constraints.
+    for (let component of components) {
+        component = [...component]; // Convert set to array for indexing.
+        const assignments = {}; // Contains current variable assignments.
+        let currentVariableIndex = 0, currentVariable;
+        while (currentVariableIndex < component.length) {
+            currentVariable = component[currentVariableIndex];
+            const variableConstraints = getVariableConstraints(currentVariable, constraints);
+
+            // Assign 0.
+            assignment = { [currentVariable]: 0 };
+            if (isConsistent(assignment, assignments, variableConstraints)) {
+                solutions.push(assignment);
+
+                assignments[currentVariable] = 0;
+                currentVariableIndex++;
+                continue;
+            }
+
+            // Assign 1 if 0 violates constraints.
+            assignment = { [currentVariable]: 1 };
+            if (isConsistent(assignment, assignments, variableConstraints)) {
+                solutions.push({currentVariable: assignment});
+
+                assignments.push({currentVariable: assignment});
+                currentVariableIndex++;
+                continue;
+            }
+
+            // Backtrack if both 0 and 1 voilate constraints.
+            //currentVariableIndex--;
+        }
+    }
+}
+
+/*
+    * Return an array of constraints involving the cell with the
+    * given index.
+    */
+function getVariableConstraints(cellIndex, constraints) {
+    const variableConstraints = [];
+    for (const constraint of constraints) {
+        if (!constraint.variables.has(cellIndex)) continue;
+        variableConstraints.push(constraint);
+    }
+
+    return variableConstraints;
+}
+
+/*
+    * Check if an assignment to a variable violates any constraints.
+    *
+    * Parameters:
+    *   `assignment`: Assignment to this variable:
+    *       { variable: assignment }
+    *   `assignments`: Assignments that have already been made to other
+    *   variables in the same component.
+    *       { variable1: assignment, variable2: assignment, ... }
+    *   `variableConstraints`: An array of constraints involving the
+    *   assigned variable.
+    *
+    * Return true if the assignment doesn't violate any constraint.
+    * Return false if the assignment violates any constraint.
+    */
+
+/*
+    * Thought Process
+    * ================
+    * Loop through all constraints involving the assigned variable.
+    * For each constraint, loop through its variables. For each variable,
+    * check if the variable is assigned a value (in `assignments`).
+    *   If the variable is assigned a 0, remove the variable from the
+    *   list of variables in the constraint.
+    *   If the variable is assigned a 1, remove it from the list of variables
+    *   in the constraint and decrement the constraint's mineCount.
+    *
+    * Note that you should not mutate the given variable constraints,
+    * instead, create a new array of the modified variable constraints. I am
+    * not entirely sure about this. I just thought about it. Look more into it
+    * and decide accordingly.
+    *
+    * After updating the constraints, loop throught the new updated constraints
+    * and check if the assignment to the variable violates any constraint.
+    */
+/*
+function isConsistent(assignment, variableConstraints) {
+    for (const variableConstraint of variableConstraints) {
+        if (assignment === 0) {
+            // Constraint is violated if the number of remaining variables
+            // is less than the required mine count.
+            const remainingVariablesCount = variableConstraint.variables.size - 1;
+            if (remainingVariablesCount < variableConstraint.mineCount) return false;
+        } else if (assignment === 1) {
+            // Constraint is violated if `variableConstraint.mineCount` === 0.
+            if (variableConstraint.mineCount === 0) return false;
+        }
+    }
+
+    return true;
+}
+*/
+function isConsistent(assignment, assignments, variableConstraints) {
+    const updatedVariableConstraints = structuredClone(variableConstraints);
+
+    let constraintIndex = 0;
+    while (constraintIndex < variableConstraints.length){
+        const constraint = variableConstraints[constraintIndex];
+        
+        for (const variable of constraint.variables) {
+            // Skip unassigned variables.
+            if (!Object.keys(assignments).includes(variable.toString())) continue;
+
+            const variableAssignment = assignments[variable];
+            if (variableAssignment === 0) {
+                // Remove variable from `variables` array.
+                const removeVariableIndex = updatedVariableConstraints[constraintIndex].variables.indexOf(variable);
+                updatedVariableConstraints[constraintIndex].variables.splice(removeVariableIndex, 1);
+            } else if (variableAssignment === 1) {
+                // Remove variable from `variables` array and decrement `mineCount`.
+                const removeVariableIndex = updatedVariableConstraints[constraintIndex].variables.indexOf(variable);
+                updatedVariableConstraints[constraintIndex].variables.splice(removeVariableIndex, 1);
+                
+                updatedVariableConstraints[constraintIndex].mineCount--;
+            }
+        }
+
+        constraintIndex++;
+    }
+
+    // Loop through the updated constraints and check if the new assignment violates any of them.
+
+    return true;
+}
+
+function enumerateComponent() {
 }
 
 // Classes
