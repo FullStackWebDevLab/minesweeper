@@ -307,12 +307,8 @@ function buildConstraints() {
     * When this function returns, `constraints` will contain only constraints with
     * unresolved variables. Those constraints whose variables were resolved by the
     * function will be removed.
-    *
-    * Returns a boolean indicating whether any cells were opened. True if atleast one
-    * new cell was opened, false otherwise.
     */
 function simplifyConstraints(constraints) {
-    let cellOpened = false;
     let changed = true;
     while (changed) {
         changed = false;
@@ -350,7 +346,6 @@ function simplifyConstraints(constraints) {
                     const cell = board[index];
                     cell.openCellAndNeighbours();
                     changed = true;
-                    cellOpened = true;
                 }
             }
         }
@@ -364,8 +359,6 @@ function simplifyConstraints(constraints) {
             constraints.splice(i, 1);
         }
     }
-
-    return cellOpened;
 }
 
 /**
