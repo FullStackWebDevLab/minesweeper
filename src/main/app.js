@@ -1,56 +1,11 @@
 /*
-# Board Representation
-
-Represent the board as an array. Have a cell object. This object will contain all the information about that cell.
-When creating the cells, have a `data-id` html attribute that contains the id of the cell starting from 0. This
-id will be the cell's index in the array.
-
-# New Board Representation
-
-Represent the board as an array of Cell objects. A Cell object will contain all the information about a cell, and
-will also have functions for interacting with the cell (e.g. getting the neighbours, opening and flagging the cell, etc).
-The position/index of the Cell objects in the array should match the position of the cell on the grid. The topleft cell
-should be at index 0 and the bottomright cell should be the last element in the Array.
-
-Init board:
-    + Create an array with all the Cell objects.
-
-Drawing the board:
-    + Iterate over the board array.
-    + Draw each cell depending on it's attributes.
-        - Opened or closed.
-        - Flagged.
-        - If opened, the number on the cell (number of mines around the cell).
-    + Create all the divs.
-
-    Should I draw the entire board every time or should I update only the modified cell?
-    If I update only the modified cell, what about when multiple neighbouring cells are automatically opened because the clicked cell doesn't have any mines around it? How will I know which cells to update? I think I'll take the 8 cells around the clicked cell.
-
-Updating the board:
-    + Have a function that updates only the changed cells on the board.
-    + This function should take an array of the indices of the target cells.
-    + Get the div of the target cell and modify its classList (open or closed), text content, and innerHTML (to add flag svg).
-
-When the user clicks on a cell:
-    + Get the index of the cell from `cell.dataset.index`.
-    + Get the cell's Cell object from the board array.
-    + Check if the cell has a mine. This information will be stored in the cell's Cell object ('hasMine').
-    + If the cell has a mine, end the game.
-    + If the cell doesn't have a mine, open the cell. Opening a cell involves:
-        - Set the state of the corresponding Cell object to "opened".
-        - Remove "closed" and add "opened" in the cell's classList.
-        - Write the number of mines around the cell on the cell. Write nothing if there are no mines around the cell.
-    + If there are no mines around the cell, open all cells around the clicked cell.
-
-When the user right-clicks on a cell:
-    + Set a flag on the cell.
-    + Decrement flag count.
-    + Set the 'isFlagged' attribute of the cell object. This flag will prevent the cell from being automatically opened when the user double clicks on a neighbouring cell.
-
-When the user double clicks on a cell:
-    + Open all cells that are not flagged around that cell.
+    * Planned Features:
+    *   When the user double clicks on an open cell, if the flags around the cell
+    *   match the number of mines around the cell, open all remaining covered cells
+    *   around the double-clicked cell. If one of the cells that were opened was a
+    *   mine, maybe because another cell was wrongly flagged, end the game.
 */
-const board = []; // Array representation of the board.
+const board = []; // The board is represented as a one-dimensional array of Cell objects.
 const boardElement = document.querySelector(".board");
 let minesPlaced = false;
 let openedCellsCount = 0;
@@ -220,12 +175,28 @@ function solve() {
     }
     */
 
+    /*
     constraints = buildConstraints();
 
     const components = findConnectedComponents(constraints);
     const solutions = enumerateAllComponents(components, constraints);
     applySolutions(solutions);
+    */
     //findFiftyFiftyPairs(solutions, components);
+    //
+
+    let initialConstraints;
+    while (true) {
+        const constraints = buildConstraints();
+
+        if (initialConstraints === constraints) break;
+        initialConstraints = constraints;
+
+        simplifyConstraints(constraints);
+        const components = findConnectedComponents(constraints);
+        const solutions = enumerateAllComponents(components, constraints);
+        applySolutions(solutions);
+    }
 }
 
 /**
