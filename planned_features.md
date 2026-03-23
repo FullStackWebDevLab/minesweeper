@@ -1,4 +1,4 @@
-# Future Plan
+# Planned Features
 
 When a cell is double-clicked, if the number of flagged cells around it equals the number displayed on the cell (indicating the mines around it), open all non-flagged cells around it. If any of these auto-opened cells contains a mine (due to a wrongly flagged cell), end the game.
 
