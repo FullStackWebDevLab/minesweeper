@@ -141,18 +141,18 @@ function placeMines(clickedCellObject) {
     }
 
     /*
-    Shuffle validCellsIndices using Fisher-Yates shuffle:
-        + Start at the last element of the list.
-        + Generate a random integer `j` such that `0 ≤ j ≤ i`, where `i` is the current index.
-        + Swap the element at index `i` with the element at index `j`.
-        + Repeat the process for index `i-1`, continuing until you reach the beginning of the list.
-    */
+        * Shuffle validCellsIndices using Fisher-Yates shuffle:
+        *   Start at the last element of the list.
+        *   Generate a random integer `j` such that `0 ≤ j ≤ i`, where `i` is the current index.
+        *   Swap the element at index `i` with the element at index `j`.
+        *   Repeat the process for index `i-1`, continuing until you reach the beginning of the list.
+        */
     for (let i = validCellsIndices.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [validCellsIndices[i], validCellsIndices[j]] = [validCellsIndices[j], validCellsIndices[i]];
     }
 
-    // Place mines.
+    // Place mines in the first `difficulty.mineCount` cells.
     for (let i = 0; i < difficulty.mineCount; i++) {
         const cellIndex = validCellsIndices[i];
         board[cellIndex].hasMine = true;
