@@ -7,7 +7,6 @@ let openedCellsCount = 0;
 let timerId;
 let seconds = 0;
 const timePassedElement = document.getElementById("timePassed");
-const remainingFlagsElement = document.querySelector(".remaining-flags");
 const winModal = document.getElementById("winModal");
 const lostModal = document.getElementById("lostModal");
 const timeTakenToWinElement = document.getElementById("timeTaken");
@@ -35,6 +34,7 @@ function main() {
     globalThis.difficulty = new Difficulty(searchParams.get("difficulty"));
 
     // Display remaining flags count.
+    const remainingFlagsElement = document.getElementById("remainingFlagsLabel");
     let remainingFlagsCount = difficulty.mineCount;
     remainingFlagsElement.innerHTML = remainingFlagsCount.toString().padStart(2, "0");
 
