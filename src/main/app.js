@@ -118,14 +118,19 @@ function endGame() {
     lostModal.classList.remove("hidden");
 }
 
-function placeMines(clickedCellObject) {
-    /*
-    Place mines across the board.
-
-    Parameters:
-        clickedCellObject:
-            An instance of the Cell class representing the clicked cell.
+/*
+    * Place mines across the board.
+    *
+    * The clicked cell and all its neighbours are guaranteed to be safe.
+    * Mines are then placed randomly (using the Fisher-Yates shuffle) in
+    * the remaining cells.
+    * The number of mines placed depends on the difficulty level.
+    *
+    * Parameters:
+    *   clickedCellObject:
+    *       An instance of the Cell class representing the clicked cell.
     */
+function placeMines(clickedCellObject) {
     const excludedCellsIndices = [clickedCellObject.index];
     excludedCellsIndices.push(...clickedCellObject.neighbours)
 
