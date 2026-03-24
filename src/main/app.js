@@ -1,10 +1,8 @@
 // Global variables.
 const board = []; // The board is represented as a one-dimensional array of Cell objects.
 
-const boardElement = document.querySelector(".board");
-let minesPlaced = false;
 let openedCellsCount = 0;
-let timerId;
+let timerIntervalId;
 let seconds = 0;
 const timePassedElement = document.getElementById("timePassed");
 const winModal = document.getElementById("winModal");
@@ -22,19 +20,23 @@ window.addEventListener("keydown", (event) => {
 
         // Check if the game is won.
         if (openedCellsCount === difficulty.safeCellsCount) {
-            clearInterval(timerId);
+            clearInterval(timerIntervalId);
             showWinModal();
         }
     }
 });
 
 function main() {
+    // Variables.
+    let minesPlaced = false;
+    const boardElement = document.querySelector(".board");
+    const remainingFlagsElement = document.getElementById("remainingFlagsLabel");
+
     // Set difficulty.
     const searchParams = new URLSearchParams(window.location.search);
     globalThis.difficulty = new Difficulty(searchParams.get("difficulty"));
 
     // Display remaining flags count.
-    const remainingFlagsElement = document.getElementById("remainingFlagsLabel");
     let remainingFlagsCount = difficulty.mineCount;
     remainingFlagsElement.innerHTML = remainingFlagsCount.toString().padStart(2, "0");
 
@@ -42,11 +44,13 @@ function main() {
     boardElement.style.setProperty("--columns", difficulty.columnCount);
     for (let i = 0; i < difficulty.cellCount; i++) {
         let cell = new Cell(i);
+        boardElement.appendChild(cell.element);
         board.push(cell);
     }
 
     // Detect when a cell is left-clicked.
     boardElement.addEventListener("click", (event) => {
+        // Determine if and which cell was clicked.
         if (!event.target.classList.contains("cell")) return;
         const clickedCellObject = board[event.target.dataset.index];
 
@@ -55,12 +59,18 @@ function main() {
         on first click.
         */
         if (!minesPlaced) {
-            startTimer();
-            placeMines(clickedCellObject);
             minesPlaced = true;
+            placeMines(clickedCellObject);
 
+            // Count the number of mines around the cells.
             for (const cell of board) cell.countMines();
 
+            // Start timer.
+            timerIntervalId = setInterval(() => {
+                if (seconds === 999) return;
+                seconds++;
+                timePassedElement.innerHTML = seconds.toString().padStart(3, "0");
+            }, 1000);
         }
 
         // End the game when a cell with a mine is clicked.
@@ -72,7 +82,7 @@ function main() {
 
         // Check if the game is won.
         if (openedCellsCount === difficulty.safeCellsCount) {
-            clearInterval(timerId);
+            clearInterval(timerIntervalId);
             showWinModal();
         }
     });
@@ -104,7 +114,7 @@ function main() {
 function endGame() {
     // Display the location of all the mines.
     for (cell of board) cell.hasMine ? cell.showMine() : {} ;
-    clearInterval(timerId);
+    clearInterval(timerIntervalId);
     lostModal.classList.remove("hidden");
 }
 
@@ -149,14 +159,6 @@ function showWinModal() {
     timeTakenToWinElement.innerHTML = seconds;
 }
 
-function startTimer() {
-    timerId = setInterval(() => {
-        if (seconds === 999) return;
-        seconds++;
-        timePassedElement.innerHTML = seconds.toString().padStart(3, "0");
-    }, 1000);
-}
-
 // Classes
 class Cell {
     state = "closed"; // Can be "opened" or "closed".
@@ -172,7 +174,6 @@ class Cell {
         this.element = document.createElement("div");
         this.element.classList.add("cell", this.state);
         this.element.dataset.index = this.index;
-        boardElement.appendChild(this.element);
 
         // Calculate cell's row and column.
         this.row = Math.floor(index / difficulty.columnCount);
