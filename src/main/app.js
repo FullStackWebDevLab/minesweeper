@@ -1,10 +1,3 @@
-/*
-    * Planned Features:
-    *   When the user double clicks on an open cell, if the flags around the cell
-    *   match the number of mines around the cell, open all remaining covered cells
-    *   around the double-clicked cell. If one of the cells that were opened was a
-    *   mine, maybe because another cell was wrongly flagged, end the game.
-*/
 const board = []; // The board is represented as a one-dimensional array of Cell objects.
 const boardElement = document.querySelector(".board");
 let minesPlaced = false;
