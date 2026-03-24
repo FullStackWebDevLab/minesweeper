@@ -1,4 +1,6 @@
+// Global variables.
 const board = []; // The board is represented as a one-dimensional array of Cell objects.
+
 const boardElement = document.querySelector(".board");
 let minesPlaced = false;
 let openedCellsCount = 0;
@@ -11,7 +13,6 @@ const lostModal = document.getElementById("lostModal");
 const timeTakenToWinElement = document.getElementById("timeTaken");
 const playAgainButtons = document.querySelectorAll(".play-again-button");
 const changeDifficultyButtons = document.querySelectorAll(".change-difficulty");
-let remainingFlagsCount;
 
 // Make the game play itself when space is pressed for quick testing.
 window.addEventListener("keydown", (event) => {
@@ -29,11 +30,13 @@ window.addEventListener("keydown", (event) => {
 });
 
 function main() {
+    // Set difficulty.
     const searchParams = new URLSearchParams(window.location.search);
     globalThis.difficulty = new Difficulty(searchParams.get("difficulty"));
 
     // Display remaining flags count.
-    remainingFlagsElement.innerHTML = difficulty.mineCount.toString().padStart(2, "0");
+    let remainingFlagsCount = difficulty.mineCount;
+    remainingFlagsElement.innerHTML = remainingFlagsCount.toString().padStart(2, "0");
 
     // Initiate the board.
     boardElement.style.setProperty("--columns", difficulty.columnCount);
@@ -82,7 +85,15 @@ function main() {
         const clickedCellObject = board[clickedCell.dataset.index];
 
         clickedCellObject.toggleFlag();
-        clickedCellObject.flagged ? decrementDisplayedRemainingFlagsCount() : incrementDisplayedRemainingFlagsCount();
+        if (clickedCellObject.flagged) {
+            // Decrement and display remaining flags count.
+            remainingFlagsCount--;
+            remainingFlagsElement.innerHTML = remainingFlagsCount.toString().padStart(2, "0");
+        } else {
+            // Increment and display remaining flags count.
+            remainingFlagsCount++;
+            remainingFlagsElement.innerHTML = remainingFlagsCount.toString().padStart(2, "0");
+        }
     });
 
     
@@ -90,21 +101,11 @@ function main() {
     for (const changeDifficultyButton of changeDifficultyButtons) changeDifficultyButton.addEventListener("click", () => { window.location.href = "../select_difficulty/index.html"; });
 }
 
-function decrementDisplayedRemainingFlagsCount() {
-    remainingFlagsCount--;
-    remainingFlagsElement.innerHTML = remainingFlagsCount.toString().padStart(2, "0");
-}
-
 function endGame() {
     // Display the location of all the mines.
     for (cell of board) cell.hasMine ? cell.showMine() : {} ;
     clearInterval(timerId);
     lostModal.classList.remove("hidden");
-}
-
-function incrementDisplayedRemainingFlagsCount() {
-    remainingFlagsCount++;
-    remainingFlagsElement.innerHTML = remainingFlagsCount.toString().padStart(2, "0");
 }
 
 function placeMines(clickedCellObject) {
@@ -201,8 +202,6 @@ class Cell {
             this.element.classList.add("flagged");
             this.element.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-flag-triangle-left-icon lucide-flag-triangle-left"><path d="M18 22V2.8a.8.8 0 0 0-1.17-.71L5.45 7.78a.8.8 0 0 0 0 1.44L18 15.5"/></svg>'
         }
-        
-        return this.flagged;
     }
     
     getNeighbours() {
