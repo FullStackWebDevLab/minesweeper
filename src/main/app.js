@@ -1,24 +1,15 @@
-/*
-    * Planned Features:
-    *   When the user double clicks on an open cell, if the flags around the cell
-    *   match the number of mines around the cell, open all remaining covered cells
-    *   around the double-clicked cell. If one of the cells that were opened was a
-    *   mine, maybe because another cell was wrongly flagged, end the game.
-*/
+// Global variables.
 const board = []; // The board is represented as a one-dimensional array of Cell objects.
-const boardElement = document.querySelector(".board");
-let minesPlaced = false;
+
 let openedCellsCount = 0;
-let timerId;
+let timerIntervalId;
 let seconds = 0;
 const timePassedElement = document.getElementById("timePassed");
-const remainingFlagsElement = document.querySelector(".remaining-flags");
 const winModal = document.getElementById("winModal");
 const lostModal = document.getElementById("lostModal");
 const timeTakenToWinElement = document.getElementById("timeTaken");
 const playAgainButtons = document.querySelectorAll(".play-again-button");
 const changeDifficultyButtons = document.querySelectorAll(".change-difficulty");
-let remainingFlagsCount;
 
 // Make the game play itself when space is pressed for quick testing.
 window.addEventListener("keydown", (event) => {
@@ -29,28 +20,37 @@ window.addEventListener("keydown", (event) => {
 
         // Check if the game is won.
         if (openedCellsCount === difficulty.safeCellsCount) {
-            clearInterval(timerId);
+            clearInterval(timerIntervalId);
             showWinModal();
         }
     }
 });
 
 function main() {
+    // Variables.
+    let minesPlaced = false;
+    const boardElement = document.querySelector(".board");
+    const remainingFlagsElement = document.getElementById("remainingFlagsLabel");
+
+    // Set difficulty.
     const searchParams = new URLSearchParams(window.location.search);
     globalThis.difficulty = new Difficulty(searchParams.get("difficulty"));
 
     // Display remaining flags count.
-    remainingFlagsElement.innerHTML = difficulty.mineCount.toString().padStart(2, "0");
+    let remainingFlagsCount = difficulty.mineCount;
+    remainingFlagsElement.innerHTML = remainingFlagsCount.toString().padStart(2, "0");
 
     // Initiate the board.
     boardElement.style.setProperty("--columns", difficulty.columnCount);
     for (let i = 0; i < difficulty.cellCount; i++) {
         let cell = new Cell(i);
+        boardElement.appendChild(cell.element);
         board.push(cell);
     }
 
     // Detect when a cell is left-clicked.
     boardElement.addEventListener("click", (event) => {
+        // Determine if and which cell was clicked.
         if (!event.target.classList.contains("cell")) return;
         const clickedCellObject = board[event.target.dataset.index];
 
@@ -59,12 +59,18 @@ function main() {
         on first click.
         */
         if (!minesPlaced) {
-            startTimer();
-            placeMines(clickedCellObject);
             minesPlaced = true;
+            placeMines(clickedCellObject);
 
+            // Count the number of mines around the cells.
             for (const cell of board) cell.countMines();
 
+            // Start timer.
+            timerIntervalId = setInterval(() => {
+                if (seconds === 999) return;
+                seconds++;
+                timePassedElement.innerHTML = seconds.toString().padStart(3, "0");
+            }, 1000);
         }
 
         // End the game when a cell with a mine is clicked.
@@ -76,7 +82,7 @@ function main() {
 
         // Check if the game is won.
         if (openedCellsCount === difficulty.safeCellsCount) {
-            clearInterval(timerId);
+            clearInterval(timerIntervalId);
             showWinModal();
         }
     });
@@ -89,7 +95,15 @@ function main() {
         const clickedCellObject = board[clickedCell.dataset.index];
 
         clickedCellObject.toggleFlag();
-        clickedCellObject.flagged ? decrementDisplayedRemainingFlagsCount() : incrementDisplayedRemainingFlagsCount();
+        if (clickedCellObject.flagged) {
+            // Decrement and display remaining flags count.
+            remainingFlagsCount--;
+            remainingFlagsElement.innerHTML = remainingFlagsCount.toString().padStart(2, "0");
+        } else {
+            // Increment and display remaining flags count.
+            remainingFlagsCount++;
+            remainingFlagsElement.innerHTML = remainingFlagsCount.toString().padStart(2, "0");
+        }
     });
 
     
@@ -97,31 +111,26 @@ function main() {
     for (const changeDifficultyButton of changeDifficultyButtons) changeDifficultyButton.addEventListener("click", () => { window.location.href = "../select_difficulty/index.html"; });
 }
 
-function decrementDisplayedRemainingFlagsCount() {
-    remainingFlagsCount--;
-    remainingFlagsElement.innerHTML = remainingFlagsCount.toString().padStart(2, "0");
-}
-
 function endGame() {
     // Display the location of all the mines.
     for (cell of board) cell.hasMine ? cell.showMine() : {} ;
-    clearInterval(timerId);
+    clearInterval(timerIntervalId);
     lostModal.classList.remove("hidden");
 }
 
-function incrementDisplayedRemainingFlagsCount() {
-    remainingFlagsCount++;
-    remainingFlagsElement.innerHTML = remainingFlagsCount.toString().padStart(2, "0");
-}
-
-function placeMines(clickedCellObject) {
-    /*
-    Place mines across the board.
-
-    Parameters:
-        clickedCellObject:
-            An instance of the Cell class representing the clicked cell.
+/*
+    * Place mines across the board.
+    *
+    * The clicked cell and all its neighbours are guaranteed to be safe.
+    * Mines are then placed randomly (using the Fisher-Yates shuffle) in
+    * the remaining cells.
+    * The number of mines placed depends on the difficulty level.
+    *
+    * Parameters:
+    *   clickedCellObject:
+    *       An instance of the Cell class representing the clicked cell.
     */
+function placeMines(clickedCellObject) {
     const excludedCellsIndices = [clickedCellObject.index];
     excludedCellsIndices.push(...clickedCellObject.neighbours)
 
@@ -132,18 +141,18 @@ function placeMines(clickedCellObject) {
     }
 
     /*
-    Shuffle validCellsIndices using Fisher-Yates shuffle:
-        + Start at the last element of the list.
-        + Generate a random integer `j` such that `0 ≤ j ≤ i`, where `i` is the current index.
-        + Swap the element at index `i` with the element at index `j`.
-        + Repeat the process for index `i-1`, continuing until you reach the beginning of the list.
-    */
+        * Shuffle validCellsIndices using Fisher-Yates shuffle:
+        *   Start at the last element of the list.
+        *   Generate a random integer `j` such that `0 ≤ j ≤ i`, where `i` is the current index.
+        *   Swap the element at index `i` with the element at index `j`.
+        *   Repeat the process for index `i-1`, continuing until you reach the beginning of the list.
+        */
     for (let i = validCellsIndices.length - 1; i > 0; i--) {
         const j = Math.floor(Math.random() * (i + 1));
         [validCellsIndices[i], validCellsIndices[j]] = [validCellsIndices[j], validCellsIndices[i]];
     }
 
-    // Place mines.
+    // Place mines in the first `difficulty.mineCount` cells.
     for (let i = 0; i < difficulty.mineCount; i++) {
         const cellIndex = validCellsIndices[i];
         board[cellIndex].hasMine = true;
@@ -153,14 +162,6 @@ function placeMines(clickedCellObject) {
 function showWinModal() {
     winModal.classList.remove("hidden");
     timeTakenToWinElement.innerHTML = seconds;
-}
-
-function startTimer() {
-    timerId = setInterval(() => {
-        if (seconds === 999) return;
-        seconds++;
-        timePassedElement.innerHTML = seconds.toString().padStart(3, "0");
-    }, 1000);
 }
 
 // Classes
@@ -178,7 +179,6 @@ class Cell {
         this.element = document.createElement("div");
         this.element.classList.add("cell", this.state);
         this.element.dataset.index = this.index;
-        boardElement.appendChild(this.element);
 
         // Calculate cell's row and column.
         this.row = Math.floor(index / difficulty.columnCount);
@@ -208,8 +208,6 @@ class Cell {
             this.element.classList.add("flagged");
             this.element.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-flag-triangle-left-icon lucide-flag-triangle-left"><path d="M18 22V2.8a.8.8 0 0 0-1.17-.71L5.45 7.78a.8.8 0 0 0 0 1.44L18 15.5"/></svg>'
         }
-        
-        return this.flagged;
     }
     
     getNeighbours() {
