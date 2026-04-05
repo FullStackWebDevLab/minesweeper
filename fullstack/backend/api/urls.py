@@ -1,6 +1,6 @@
 from django.urls import path
-from .views import index
+from .views import generate_new_board
 
 urlpatterns = [
-    path("", index),
+    path("new/", generate_new_board),
 ]
