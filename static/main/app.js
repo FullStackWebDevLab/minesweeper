@@ -52,7 +52,7 @@ function placeMines(clickedCellObject) {
     excludedCellsIndices.push(...clickedCellObject.neighbours)
 
     const validCellsIndices = [];
-    for (let i = 0; i < difficulty.cellCount; i++) {
+    for (let i = 0; i < DIFFICULTY.cellCount; i++) {
         if (excludedCellsIndices.includes(i)) continue;
         validCellsIndices.push(i);
     }
@@ -100,15 +100,21 @@ class Difficulty {
 }
 
 class Cell {
+    // this.hasMine is a boolean that indicates whether the cell has a mine or not.
     constructor(index) {
         this.index = index;
-
         this.state = "closed"; // "opened" or "closed"
 
         // Create cell HTML element.
         this.element = document.createElement("div");
         this.element.classList.add("cell", this.state);
         this.element.dataset.index = this.index;
+
+        // Calculate cell's row and column.
+        this.row = Math.floor(this.index / DIFFICULTY.columnCount);
+        this.col = this.index % DIFFICULTY.columnCount;
+
+        this.neighbours = this.getNeighbours();
     }
 
     openCellAndNeighbours() {
@@ -119,6 +125,38 @@ class Cell {
             * Return the number of cells opened.
             */
     }
+
+    /*
+        * Calculate and return the indices of the current cell's neighbours.
+        *
+        * Returns an array of indices of this cell's neighbours.
+        * index = (row * columnCount) + col
+        */
+    getNeighbours() {
+        const neighbours = [];
+
+        for (const deltaRow of [-1, 0, 1]) {
+            for (const deltaCol of [-1, 0, 1]) {
+                if (deltaRow === 0 & deltaCol === 0) continue;
+                
+                const newRow = this.row + deltaRow;
+                const newCol = this.col + deltaCol;
+
+                if (
+                    newRow >= 0 &&
+                    newRow < DIFFICULTY.rowCount &&
+                    newCol >= 0 &&
+                    newCol < DIFFICULTY.columnCount
+                ) {
+                    const neighbourIndex = (newRow * DIFFICULTY.columnCount) + newCol;
+                    neighbours.push(neighbourIndex);
+                }
+            }
+        }
+
+        return neighbours;
+    }
+
 }
 
 /*
@@ -136,8 +174,8 @@ class GameLogic {
         const clickedCellObject = BOARD[event.target.dataset.index];
 
         // Place mines on the first click.
-        if (!minesPlaced) {
-            minesPlaced = true;
+        if (!this.minesPlaced) {
+            this.minesPlaced = true;
             placeMines(clickedCellObject);
         }
     }
