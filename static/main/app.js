@@ -100,7 +100,8 @@ class Difficulty {
 }
 
 class Cell {
-    // this.hasMine is a boolean that indicates whether the cell has a mine or not.
+    // this.hasMine (Boolean) indicates whether the cell has a mine or not.
+    // this.mineCount (Number) stores the number of mines around the cell.
     constructor(index) {
         this.index = index;
         this.state = "closed"; // "opened" or "closed"
@@ -153,10 +154,19 @@ class Cell {
                 }
             }
         }
-
         return neighbours;
     }
 
+    countMines() {
+        // Count the number of mines around the cell.
+        if (this.hasMine) continue;
+
+        this.mineCount = 0;
+        for (const index of this.neighbours) {
+            const neighbourCell = BOARD[index];
+            if (neighbourCell.hasMine) this.mineCount++;
+        }
+    }
 }
 
 /*
@@ -173,22 +183,29 @@ class GameLogic {
         if (!event.target.classList.contains("cell")) return;
         const clickedCellObject = BOARD[event.target.dataset.index];
 
-        // Place mines on the first click.
+        /*
+            * Start timer, place mines, and count number of mines around each cell
+            * on first click.
+            */
         if (!this.minesPlaced) {
             this.minesPlaced = true;
             placeMines(clickedCellObject);
+
+            // Count the number of mines around the cells.
+            for (const cell of BOARD) cell.countMines();
         }
     }
 
     /*
-        * Open the cell at the given index.
+        * Open the given cell.
         * End the game if the cell has a mine.
         * If the cell is safe, check if the game has been won.
         * The game is won when all safe cells are opened.
+        *
+        * Parameters:
+        *   `cell`: An instance of the Cell class representing the clicked cell.
         */
-    openCell(index) {
-        const cell = BOARD[index];
-
+    openCell(cell) {
         // End the game if the cell has a mine.
         if (cell.hasMine) { console.log("Game ended."); }
 
