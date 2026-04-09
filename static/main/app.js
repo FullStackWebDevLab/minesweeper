@@ -3,6 +3,8 @@ const boardElement = document.querySelector(".board");
 const remainingFlagsElement = document.getElementById("remainingFlagsLabel");
 
 function main() {
+    const gameLogic = new GameLogic();
+
     // Init the board.
     globalThis.BOARD = [];
 
@@ -10,6 +12,9 @@ function main() {
     globalThis.DIFFICULTY = new Difficulty(searchParams.get("difficulty"));
 
     init();
+
+    // Handle events.
+    boardElement.addEventListener("click", gameLogic.clickHandler);
 }
 
 /*
@@ -27,6 +32,47 @@ function init() {
         const cell = new Cell(i);
         boardElement.appendChild(cell.element);
         BOARD.push(cell);
+    }
+}
+
+/*
+    * Place mines across the board.
+    *
+    * The clicked cell and all its neighbours are guaranteed to be safe.
+    * Mines are then placed randomly (using the Fisher-Yates shuffle) in
+    * the remaining cells.
+    * The number of mines placed depends on the difficulty.
+    *
+    * Parameters:
+    *   clickedCellObject:
+    *       An instance of the Cell class representing the clicked cell.
+    */
+function placeMines(clickedCellObject) {
+    const excludedCellsIndices = [clickedCellObject.index];
+    excludedCellsIndices.push(...clickedCellObject.neighbours)
+
+    const validCellsIndices = [];
+    for (let i = 0; i < difficulty.cellCount; i++) {
+        if (excludedCellsIndices.includes(i)) continue;
+        validCellsIndices.push(i);
+    }
+
+    /*
+        * Shuffle validCellsIndices using Fisher-Yates shuffle:
+        *   Start at the last element of the list.
+        *   Generate a random integer `j` such that `0 ≤ j ≤ i`, where `i` is the current index.
+        *   Swap the element at index `i` with the element at index `j`.
+        *   Repeat the process for index `i-1`, continuing until you reach the beginning of the list.
+        */
+    for (let i = validCellsIndices.length - 1; i > 0; i--) {
+        const j = Math.floor(Math.random() * (i + 1));
+        [validCellsIndices[i], validCellsIndices[j]] = [validCellsIndices[j], validCellsIndices[i]];
+    }
+
+    // Place mines in the first `DIFFICULTY.mineCount` cells.
+    for (let i = 0; i < DIFFICULTY.mineCount; i++) {
+        const cellIndex = validCellsIndices[i];
+        BOARD[cellIndex].hasMine = true;
     }
 }
 
@@ -81,6 +127,19 @@ class Cell {
 class GameLogic {
     constructor() {
         this.openedCellsCount = 0; // game is won when this equals DIFFICULTY.safeCellsCount.
+        this.minesPlaced = false;
+    }
+
+    clickHandler(event) {
+        // Determine if and which cell was clicked.
+        if (!event.target.classList.contains("cell")) return;
+        const clickedCellObject = BOARD[event.target.dataset.index];
+
+        // Place mines on the first click.
+        if (!minesPlaced) {
+            minesPlaced = true;
+            placeMines(clickedCellObject);
+        }
     }
 
     /*
