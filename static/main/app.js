@@ -240,29 +240,6 @@ class GameLogic {
             console.log("Game won.");
         }
     }
-
-    /*
-        * Open the given cell.
-        * End the game if the cell has a mine.
-        * If the cell is safe, check if the game has been won.
-        * The game is won when all safe cells are opened.
-        *
-        * Parameters:
-        *   `cell`: An instance of the Cell class representing the clicked cell.
-        */
-    openCell(cell) {
-        // End the game if the cell has a mine.
-        if (cell.hasMine) { console.log("Game ended."); }
-
-        // Open safe cell.
-        const cellsOpened = cell.openCellAndNeighbours();
-        this.openedCellsCount = this.openedCellsCount + cellsOpened;
-
-        // Check if game is won.
-        if (this.openedCellsCount == this.safeCellsCount) {
-            console.log("Game won.");
-        }
-    }
 }
 
 main();
