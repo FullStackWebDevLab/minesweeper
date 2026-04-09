@@ -28,7 +28,6 @@ function init() {
         boardElement.appendChild(cell.element);
         BOARD.push(cell);
     }
-
 }
 
 class Difficulty {
@@ -50,7 +49,7 @@ class Difficulty {
         }
 
         this.cellCount = this.rowCount * this.columnCount;
-        // this.safeCellsCount = this.cellCount - this.mineCount;
+        this.safeCellsCount = this.cellCount - this.mineCount;
     }
 }
 
@@ -64,6 +63,46 @@ class Cell {
         this.element = document.createElement("div");
         this.element.classList.add("cell", this.state);
         this.element.dataset.index = this.index;
+    }
+
+    openCellAndNeighbours() {
+        /*
+            * Open the current cell and display the number of mines around it.
+            * If the cell doesn't have any mines around it, open all of its neighbours.
+            *
+            * Return the number of cells opened.
+            */
+    }
+}
+
+/*
+    * Handle main game logic; open cells, check wins and losses, etc.
+    */
+class GameLogic {
+    constructor() {
+        this.openedCellsCount = 0; // game is won when this equals DIFFICULTY.safeCellsCount.
+    }
+
+    /*
+        * Open the cell at the given index.
+        * End the game if the cell has a mine.
+        * If the cell is safe, check if the game has been won.
+        * The game is won when all safe cells are opened.
+        */
+    openCell(index) {
+        const cell = BOARD[index];
+
+        // End the game if the cell has a mine.
+        if (cell.hasMine) { console.log("Game ended."); }
+
+        // Open safe cell.
+        const cellsOpened = cell.openCellAndNeighbours();
+        this.openedCellsCount = this.openedCellsCount + cellsOpened;
+
+        // Check if game is won.
+        if (this.openedCellsCount == this.safeCellsCount) {
+            console.log("Game won.");
+        }
     }
 }
 
