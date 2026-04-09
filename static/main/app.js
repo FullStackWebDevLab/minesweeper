@@ -119,13 +119,31 @@ class Cell {
         this.neighbours = this.getNeighbours();
     }
 
+    /*
+        * Open the current cell and display the number of mines around it.
+        * If the cell doesn't have any mines around it, open all of its neighbours.
+        *
+        * Return the number of cells opened.
+        */
     openCellAndNeighbours() {
-        /*
-            * Open the current cell and display the number of mines around it.
-            * If the cell doesn't have any mines around it, open all of its neighbours.
-            *
-            * Return the number of cells opened.
-            */
+        let openedCellsCount = 0;
+        if (this.state === "opened") return openedCellsCount;
+
+        this.state = "opened"; openedCellsCount++;
+        this.element.classList.remove("closed");
+        this.element.classList.add("opened");
+        this.element.innerHTML = this.mineCount;
+
+        // Open neighbouring cells if they don't have mines.
+        if (this.mineCount > 0) return;
+        this.element.innerHTML = "";
+        for (const neighbourIndex of this.neighbours) {
+            const neighbourCellObject = BOARD[neighbourIndex];
+            const neighbourOpenCellsCount = neighbourCellObject.openCellAndNeighbours();
+            openedCellsCount = openedCellsCount + neighbourOpenCellsCount;
+        }
+
+        return openedCellsCount;
     }
 
     /*
@@ -206,6 +224,9 @@ class GameLogic {
             // Count the number of mines around the cells.
             for (const cell of BOARD) cell.countMines();
         }
+
+        // Open the cell.
+        clickedCellObject.openCellAndNeighbours();
     }
 
     /*
