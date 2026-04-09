@@ -135,7 +135,7 @@ class Cell {
         this.element.innerHTML = this.mineCount;
 
         // Open neighbouring cells if they don't have mines.
-        if (this.mineCount > 0) return;
+        if (this.mineCount > 0) return openedCellsCount;
         this.element.innerHTML = "";
         for (const neighbourIndex of this.neighbours) {
             const neighbourCellObject = BOARD[neighbourIndex];
@@ -225,8 +225,20 @@ class GameLogic {
             for (const cell of BOARD) cell.countMines();
         }
 
+        // End the game if the cell has a mine.
+        if (clickedCellObject.hasMine) {
+            console.log("Game ended.");
+        }
+
         // Open the cell.
-        clickedCellObject.openCellAndNeighbours();
+        const cellsOpened = clickedCellObject.openCellAndNeighbours();
+        this.openedCellsCount = this.openedCellsCount + cellsOpened;
+
+        // Check if the game has been won.
+        console.log(`Opened cells count: ${this.openedCellsCount}  Safe cells count: ${DIFFICULTY.safeCellsCount}`);
+        if (this.openedCellsCount == DIFFICULTY.safeCellsCount) {
+            console.log("Game won.");
+        }
     }
 
     /*
