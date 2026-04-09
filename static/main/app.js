@@ -1,5 +1,6 @@
 // HTML Elements
 const boardElement = document.querySelector(".board");
+const timePassedElement = document.getElementById("timePassed");
 const remainingFlagsElement = document.getElementById("remainingFlagsLabel");
 
 function main() {
@@ -14,7 +15,7 @@ function main() {
     init();
 
     // Handle events.
-    boardElement.addEventListener("click", gameLogic.clickHandler);
+    boardElement.addEventListener("click", (event) => gameLogic.clickHandler(event));
 }
 
 /*
@@ -159,7 +160,7 @@ class Cell {
 
     countMines() {
         // Count the number of mines around the cell.
-        if (this.hasMine) continue;
+        if (this.hasMine) return;
 
         this.mineCount = 0;
         for (const index of this.neighbours) {
@@ -176,20 +177,31 @@ class GameLogic {
     constructor() {
         this.openedCellsCount = 0; // game is won when this equals DIFFICULTY.safeCellsCount.
         this.minesPlaced = false;
+
+        this.secondsPassed = 0;
+        // this.timerIntervalId stores the Interval ID of the timer.
     }
 
+    // Runs when a cell is clicked to open.
     clickHandler(event) {
         // Determine if and which cell was clicked.
         if (!event.target.classList.contains("cell")) return;
         const clickedCellObject = BOARD[event.target.dataset.index];
 
         /*
-            * Start timer, place mines, and count number of mines around each cell
+            * Start timer, place mines, and count number of mines around safe cells
             * on first click.
             */
         if (!this.minesPlaced) {
-            this.minesPlaced = true;
+            this.timerIntervalId = setInterval(() => {
+                if (this.secondsPassed === 999) return;
+                this.secondsPassed++;
+                timePassedElement.innerHTML = this.secondsPassed.toString().padStart(3, "0");
+            }, 1000);
+
+            // Place mines.
             placeMines(clickedCellObject);
+            this.minesPlaced = true;
 
             // Count the number of mines around the cells.
             for (const cell of BOARD) cell.countMines();
