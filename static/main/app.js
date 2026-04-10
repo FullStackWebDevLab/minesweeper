@@ -209,6 +209,7 @@ class Cell {
     */
 class GameLogic {
     constructor() {
+        this.gameEnded = false; // Whether the game is ended or not.
         this.minesPlaced = false;
         this.openedCellsCount = 0; // game is won when this equals DIFFICULTY.safeCellsCount.
         this.remainingFlagsCount = DIFFICULTY.mineCount;
@@ -219,6 +220,8 @@ class GameLogic {
 
     // Runs when a cell is clicked to open.
     clickHandler(event) {
+        if (this.gameEnded) return;
+
         // Determine if and which cell was clicked.
         if (!event.target.classList.contains("cell")) return;
         const clickedCellObject = BOARD[event.target.dataset.index];
@@ -228,7 +231,9 @@ class GameLogic {
 
         // End the game if the cell has a mine.
         if (clickedCellObject.hasMine) {
-            console.log("Game ended.");
+            console.log("Game lost.");
+            this.endGame();
+            return;
         }
 
         // Open the cell.
@@ -238,6 +243,8 @@ class GameLogic {
         // Check if the game has been won.
         if (this.openedCellsCount == DIFFICULTY.safeCellsCount) {
             console.log("Game won.");
+            this.endGame();
+            return;
         }
     }
 
@@ -247,6 +254,7 @@ class GameLogic {
         */
     toggleFlag(event) {
         event.preventDefault();
+        if (this.gameEnded) return;
 
         // Get clicked cell and toggle its flag.
         const clickedCell = event.target.closest(".cell");
@@ -263,6 +271,14 @@ class GameLogic {
             this.remainingFlagsCount++;
             remainingFlagsElement.innerHTML = this.remainingFlagsCount.toString().padStart(2, "0");
         }
+    }
+
+    /*
+        * Disable events on the board and stop the timer when the game is won or lost.
+        */
+    endGame() {
+        this.gameEnded = true;
+        clearInterval(this.timerIntervalId);
     }
 
     /*
