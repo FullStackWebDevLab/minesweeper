@@ -1,4 +1,4 @@
-import MinesweeperAPI from "./api.js";
+import Solver from "./solver.js";
 
 // HTML Elements
 const boardElement = document.querySelector(".board");
@@ -32,6 +32,10 @@ function main() {
 
         gameLogic.toggleFlag(cell);
     });
+
+    // Solver.
+    const api = new MinesweeperAPI(gameLogic);
+    const solver = new Solver(api);
 }
 
 /*
@@ -328,7 +332,22 @@ class GameLogic {
     }
 }
 
-class MinesweeperAPIAdapter extends MinesweeperAPI {
+class MinesweeperAPI {
+    /*
+        * Parameters:
+        *   `gameLogic`: An instance of the GameLogic class.
+        */
+    constructor(gameLogic) {
+        this.gameLogic = gameLogic;
+    }
+
+    /*
+        * Open the cell at the given index.
+        */
+    openCell(index) {
+        const cell = BOARD[index];
+        this.gameLogic.clickHandler(cell);
+    }
 }
 
 main();
