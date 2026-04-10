@@ -1,3 +1,5 @@
+import MinesweeperAPI from "./api.js";
+
 // HTML Elements
 const boardElement = document.querySelector(".board");
 const timePassedElement = document.getElementById("timePassed");
@@ -14,8 +16,22 @@ function main() {
 
     const gameLogic = new GameLogic();
     // Handle events.
-    boardElement.addEventListener("click", (event) => gameLogic.clickHandler(event));
-    boardElement.addEventListener("contextmenu", (event) => gameLogic.toggleFlag(event));
+    boardElement.addEventListener("click", (event) => {
+        if (!event.target.classList.contains("cell")) return;
+        const cell = BOARD[event.target.dataset.index];
+
+        gameLogic.clickHandler(cell);
+    });
+
+    boardElement.addEventListener("contextmenu", (event) => {
+        event.preventDefault();
+
+        const clickedCell = event.target.closest(".cell");
+        if (!clickedCell) return;
+        const cell = BOARD[clickedCell.dataset.index];
+
+        gameLogic.toggleFlag(cell);
+    });
 }
 
 /*
@@ -218,25 +234,29 @@ class GameLogic {
         // this.timerIntervalId stores the Interval ID of the timer.
     }
 
-    // Runs when a cell is clicked to open.
-    clickHandler(event) {
+    /*
+        * Place mines on the first click,
+        * end the game if the clicked cell has a mine,
+        * open the cell if safe, and
+        * check if the game has been won.
+        *
+        * Parameters:
+        *   `cell`: An instance of the Cell class representing the clicked cell.
+        */
+    clickHandler(cell) {
         if (this.gameEnded) return;
 
-        // Determine if and which cell was clicked.
-        if (!event.target.classList.contains("cell")) return;
-        const clickedCellObject = BOARD[event.target.dataset.index];
-
         // First click.
-        if (!this.minesPlaced) this.firstClick(clickedCellObject);
+        if (!this.minesPlaced) this.firstClick(cell);
 
         // End the game if the cell has a mine.
-        if (clickedCellObject.hasMine) {
+        if (cell.hasMine) {
             this.endGame("lost");
             return;
         }
 
         // Open the cell.
-        const cellsOpened = clickedCellObject.openCellAndNeighbours();
+        const cellsOpened = cell.openCellAndNeighbours();
         this.openedCellsCount = this.openedCellsCount + cellsOpened;
 
         // Check if the game has been won.
@@ -249,20 +269,17 @@ class GameLogic {
     /*
         * Toggle the flag on the right-clicked cell, and update displayed remaining
         * flags count.
+        *
+        * Parameters:
+        *   `cell`: An instance of the Cell class representing the right-clicked cell.
         */
-    toggleFlag(event) {
-        event.preventDefault();
+    toggleFlag(cell) {
         if (this.gameEnded) return;
 
-        // Get clicked cell and toggle its flag.
-        const clickedCell = event.target.closest(".cell");
-        if (!clickedCell) return;
-        const clickedCellObject = BOARD[clickedCell.dataset.index];
-
-        clickedCellObject.toggleFlag();
+        cell.toggleFlag();
 
         // Update displayed remaining flags count.
-        if (clickedCellObject.flagged) {
+        if (cell.flagged) {
             this.remainingFlagsCount--;
             remainingFlagsElement.innerHTML = this.remainingFlagsCount.toString().padStart(2, "0");
         } else {
@@ -309,6 +326,9 @@ class GameLogic {
         // Count the number of mines around safe cells.
         for (const cell of BOARD) cell.countMines();
     }
+}
+
+class MinesweeperAPIAdapter extends MinesweeperAPI {
 }
 
 main();
