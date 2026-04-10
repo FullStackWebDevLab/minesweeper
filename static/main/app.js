@@ -36,6 +36,7 @@ function main() {
     // Solver.
     const api = new MinesweeperAPI(gameLogic);
     const solver = new Solver(api);
+    solver.solve();
 }
 
 /*
@@ -347,6 +348,13 @@ class MinesweeperAPI {
     openCell(index) {
         const cell = BOARD[index];
         this.gameLogic.clickHandler(cell);
+    }
+
+    /*
+        * Return a Difficulty object representing the game's difficulty.
+        */
+    getDifficulty() {
+        return DIFFICULTY;
     }
 }
 
