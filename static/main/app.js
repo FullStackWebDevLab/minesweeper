@@ -356,6 +356,50 @@ class MinesweeperAPI {
     getDifficulty() {
         return DIFFICULTY;
     }
+
+    /*
+        * Return an array of indices of opened cells.
+        */
+    getOpenCells() {
+        const openCells = [];
+        for (const cell of BOARD) {
+            if (cell.state === "closed") continue;
+            openCells.push(cell.index);
+        }
+        
+        return openCells;
+    }
+
+    /*
+        * Return an array of indices of the neighbours of the cell
+        * with the given index.
+        */
+    getCellNeighbours(index) {
+        const cell = BOARD[index];
+        return cell.neighbours;
+    }
+
+    /*
+        * Return the number of mines around the cell with the given
+        * index.
+        */
+    getCellMineCount(index) {
+        const cell = BOARD[index];
+        return cell.mineCount;
+    }
+
+    /*
+        * Return an array of indices of flagged cells.
+        */
+    getFlaggedCells() {
+        const flaggedCells = [];
+        for (const cell of BOARD) {
+            if (!cell.flagged) continue;
+            flaggedCells.push(cell.index);
+        }
+
+        return flaggedCells;
+    }
 }
 
 main();
