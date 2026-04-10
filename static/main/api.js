@@ -2,7 +2,7 @@
     * This API provides an interface for programs to access the minesweeper game.
     * It is originally intended to be used by the solver to play the game.
     */
-class MinesweeperAPI() {
+export default class MinesweeperAPI() {
     openCell(index) {
         // Open the cell at the given index.
         // Return true if the cell was safe, false if the cell had a mine.
