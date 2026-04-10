@@ -4,18 +4,18 @@ const timePassedElement = document.getElementById("timePassed");
 const remainingFlagsElement = document.getElementById("remainingFlagsLabel");
 
 function main() {
-    const gameLogic = new GameLogic();
-
-    // Init the board.
+    // Define global variables.
     globalThis.BOARD = [];
-
     const searchParams = new URLSearchParams(window.location.search);
     globalThis.DIFFICULTY = new Difficulty(searchParams.get("difficulty"));
 
+    // Init the game.
     init();
 
+    const gameLogic = new GameLogic();
     // Handle events.
     boardElement.addEventListener("click", (event) => gameLogic.clickHandler(event));
+    boardElement.addEventListener("contextmenu", (event) => gameLogic.toggleFlag(event));
 }
 
 /*
@@ -106,6 +106,7 @@ class Cell {
     constructor(index) {
         this.index = index;
         this.state = "closed"; // "opened" or "closed"
+        this.flagged = false;
 
         // Create cell HTML element.
         this.element = document.createElement("div");
@@ -144,6 +145,21 @@ class Cell {
         }
 
         return openedCellsCount;
+    }
+
+    toggleFlag() {
+        if (this.state === "opened") return;
+
+        if (this.flagged) {
+            this.flagged = false;
+            this.element.classList.remove("flagged");
+            this.element.innerHTML = "";
+        } else {
+            this.flagged = true;
+            this.element.classList.add("flagged");
+            // Add flag svg.
+            this.element.innerHTML = '<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" class="lucide lucide-flag-triangle-left-icon lucide-flag-triangle-left"><path d="M18 22V2.8a.8.8 0 0 0-1.17-.71L5.45 7.78a.8.8 0 0 0 0 1.44L18 15.5"/></svg>'
+        }
     }
 
     /*
@@ -193,8 +209,9 @@ class Cell {
     */
 class GameLogic {
     constructor() {
-        this.openedCellsCount = 0; // game is won when this equals DIFFICULTY.safeCellsCount.
         this.minesPlaced = false;
+        this.openedCellsCount = 0; // game is won when this equals DIFFICULTY.safeCellsCount.
+        this.remainingFlagsCount = DIFFICULTY.mineCount;
 
         this.secondsPassed = 0;
         // this.timerIntervalId stores the Interval ID of the timer.
@@ -225,6 +242,30 @@ class GameLogic {
     }
 
     /*
+        * Toggle the flag on the right-clicked cell, and update displayed remaining
+        * flags count.
+        */
+    toggleFlag(event) {
+        event.preventDefault();
+
+        // Get clicked cell and toggle its flag.
+        const clickedCell = event.target.closest(".cell");
+        if (!clickedCell) return;
+        const clickedCellObject = BOARD[clickedCell.dataset.index];
+
+        clickedCellObject.toggleFlag();
+
+        // Update displayed remaining flags count.
+        if (clickedCellObject.flagged) {
+            this.remainingFlagsCount--;
+            remainingFlagsElement.innerHTML = this.remainingFlagsCount.toString().padStart(2, "0");
+        } else {
+            this.remainingFlagsCount++;
+            remainingFlagsElement.innerHTML = this.remainingFlagsCount.toString().padStart(2, "0");
+        }
+    }
+
+    /*
         * Start timer, place mines, and count number of mines around safe cells
         * on first click.
         *
@@ -232,6 +273,7 @@ class GameLogic {
         *   cell: An instance of the Cell class representing the clicked cell.
         */
     firstClick(cell) {
+        // Start timer.
         this.timerIntervalId = setInterval(() => {
             if (this.secondsPassed === 999) return;
             this.secondsPassed++;
@@ -242,7 +284,7 @@ class GameLogic {
         placeMines(cell);
         this.minesPlaced = true;
 
-        // Count the number of mines around the cells.
+        // Count the number of mines around safe cells.
         for (const cell of BOARD) cell.countMines();
     }
 }
