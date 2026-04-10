@@ -231,8 +231,7 @@ class GameLogic {
 
         // End the game if the cell has a mine.
         if (clickedCellObject.hasMine) {
-            console.log("Game lost.");
-            this.endGame();
+            this.endGame("lost");
             return;
         }
 
@@ -242,8 +241,7 @@ class GameLogic {
 
         // Check if the game has been won.
         if (this.openedCellsCount == DIFFICULTY.safeCellsCount) {
-            console.log("Game won.");
-            this.endGame();
+            this.endGame("won");
             return;
         }
     }
@@ -274,11 +272,19 @@ class GameLogic {
     }
 
     /*
-        * Disable events on the board and stop the timer when the game is won or lost.
+        * Disable events on the board, stop the timer, and display the outcome
+        * when the game is won or lost.
+        *
+        * Parameters:
+        *   `outcome`: The outcome of the game. Can be "won" or "lost".
         */
-    endGame() {
+    endGame(outcome) {
         this.gameEnded = true;
         clearInterval(this.timerIntervalId);
+
+        // Display game outcome.
+        const gameEndMessageElement = document.getElementById("gameEndMessage");
+        gameEndMessageElement.innerHTML = `Game ${outcome}`;
     }
 
     /*
