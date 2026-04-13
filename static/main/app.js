@@ -400,6 +400,24 @@ class MinesweeperAPI {
 
         return flaggedCells;
     }
+
+    /*
+        * Return true if the cell with the given index is flagged,
+        * false otherwise.
+        */
+    isFlagged(index) {
+        const cell = BOARD[index];
+        return cell.flagged;
+    }
+
+    /*
+        * Return the state of the cell with the given index.
+        * State can be "closed" or "opened".
+        */
+    getCellState(index) {
+        const cell = BOARD[index];
+        return cell.state;
+    }
 }
 
 main();
