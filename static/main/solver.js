@@ -21,9 +21,7 @@ export default class Solver {
         */
     solve() {
         this.openRandomCell();
-
-        const constraints = this.buildConstraints();
-        console.log(constraints);
+        this.solveStraightForwardConstraints();
     }
 
     /*
@@ -48,6 +46,7 @@ export default class Solver {
         * This function returns an array of constraints.
         */
     buildConstraints() {
+        // TODO: Build one constraint for the entire board.
         const openCells = this.api.getOpenCells();
         const flaggedCells = this.api.getFlaggedCells();
 
@@ -90,5 +89,46 @@ export default class Solver {
         }
 
         return constraints;
+    }
+
+    /*
+        * This function builds constraints, then searches for straight
+        * forward constraints. Straight forward constraints are:
+        *   + Constraints where the number of variables equals the mine count.
+        *       For such constraints, all the variables contain mines.
+        *   + Constraints where the mine count is zero. For such constraints,
+        *       all variables are safe (if any).
+        * This function then solves these straight forward constraints and
+        * repeats the cycle (build then solve constraints).
+        * The cycle repeats until no new straight forward constraints are found.
+        */
+    solveStraightForwardConstraints() {
+        let changed = true;
+        while (changed) {
+            changed = false;
+            const constraints = this.buildConstraints();
+
+            for (const constraint of constraints) {
+                const variables = constraint.variables;
+                const mineCount = constraint.mineCount;
+
+                // Get constraints where all variables are mines.
+                if (variables.length === mineCount) {
+                    for (const variable of variables) {
+                        this.api.flag(variable); 
+                    }
+                    changed = true;
+                }
+
+                // Get constraints where the mine count is 0.
+                if (mineCount === 0) {
+                    for (const variable of variables) {
+                        this.api.open(variable);
+                        console.log("Opening cell");
+                    }
+                    changed = true;
+                }
+            }
+        }
     }
 }

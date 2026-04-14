@@ -418,6 +418,26 @@ class MinesweeperAPI {
         const cell = BOARD[index];
         return cell.state;
     }
+
+    /*
+        * Flag the cell with the given index.
+        * Do nothing if the cell is already flagged.
+        */
+    flag(index) {
+        const cell = BOARD[index];
+        if (cell.flagged) return;
+        this.gameLogic.toggleFlag(cell);
+    }
+
+    /*
+        * Open the cell with the given index.
+        * Do nothing if the cell is already opened.
+        */
+    open(index) {
+        const cell = BOARD[index];
+        if (cell.state === "opened") return;
+        this.gameLogic.clickHandler(cell);
+    }
 }
 
 main();
