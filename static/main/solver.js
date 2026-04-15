@@ -22,6 +22,7 @@ export default class Solver {
     solve() {
         this.openRandomCell();
         this.solveStraightForwardConstraints();
+        this.buildComponents();
     }
 
     /*
@@ -95,7 +96,7 @@ export default class Solver {
         }
 
         const constraint = { "variables": variables, "mineCount": mineCount };
-        constraints.push(constraint);
+        // constraints.push(constraint);
 
         return constraints;
     }
@@ -160,5 +161,38 @@ export default class Solver {
             // Break when the game is won.
             if (this.api.checkWin()) break;
         }
+    }
+
+    /*
+        * Build and return an array of components.
+        * A component is a set of connected variables. 2 variables belong
+        * in the same component if they share at least one constraint.
+        */
+    buildComponents() {
+        /*
+            * Build a graph.
+            * The graph is represented as an adjacency map.
+            * The key is a Number index representing a node on the graph.
+            * The value is a set of indices of the node's neighbours.
+            */
+        const constraints = this.buildConstraints();
+        const adjacencyMap = new Map(); // index: Set(indices)
+
+        for (const constraint of constraints) {
+            for (const variable of constraint.variables) {
+                if (!adjacencyMap.has(variable)) adjacencyMap.set(variable, new Set());
+
+                for (const variable2 of constraint.variables) {
+                    if (variable === variable2) continue;
+                    adjacencyMap.get(variable).add(variable2);
+                }
+            }
+        }
+
+        /*
+            * Use breadth-first search to build components.
+            */
+
+        console.log(adjacencyMap);
     }
 }
