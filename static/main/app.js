@@ -438,6 +438,13 @@ class MinesweeperAPI {
         if (cell.state === "opened") return;
         this.gameLogic.clickHandler(cell);
     }
+
+    /*
+        * Return true if the game is won, false otherwise.
+        */
+    checkWin() {
+        return this.gameLogic.gameEnded;
+    }
 }
 
 main();

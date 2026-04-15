@@ -46,7 +46,6 @@ export default class Solver {
         * This function returns an array of constraints.
         */
     buildConstraints() {
-        // TODO: Build one constraint for the entire board.
         const openCells = this.api.getOpenCells();
         const flaggedCells = this.api.getFlaggedCells();
 
@@ -57,7 +56,7 @@ export default class Solver {
             unsolvedCells.push(index);
         }
 
-        // Build constraints.
+        // Build constraints for each unsolved cell.
         const constraints = [];
         for (const cellIndex of unsolvedCells) {
             const variables = [];
@@ -77,16 +76,26 @@ export default class Solver {
             }
 
             // Keep track of solved cells and skip them.
-            // Solved cells have a no variables and no mineCount.
+            // Solved cells have no variables and no mineCount.
             if (variables.length === 0 && mineCount === 0) {
                 this.solvedCells.push(cellIndex);
                 continue;
             }
 
-            // Final constraint.
             const constraint = { "variables": variables, "mineCount": mineCount }
             constraints.push(constraint);
         }
+
+        // Build constraint for the entire board.
+        const mineCount = this.difficulty.mineCount - flaggedCells.length;
+        const variables = [];
+        for (let i = 0; i < this.difficulty.cellCount; i++) {
+            if (openCells.includes(i) || flaggedCells.includes(i)) continue;
+            variables.push(i);
+        }
+
+        const constraint = { "variables": variables, "mineCount": mineCount };
+        constraints.push(constraint);
 
         return constraints;
     }
@@ -100,7 +109,8 @@ export default class Solver {
         *       all variables are safe (if any).
         * This function then solves these straight forward constraints and
         * repeats the cycle (build then solve constraints).
-        * The cycle repeats until no new straight forward constraints are found.
+        * The cycle repeats until no new straight forward constraints are found
+        * or when the game is won.
         */
     solveStraightForwardConstraints() {
         let changed = true;
@@ -112,7 +122,25 @@ export default class Solver {
                 const variables = constraint.variables;
                 const mineCount = constraint.mineCount;
 
-                // Get constraints where all variables are mines.
+                /*
+                    * Start by flagging cells with mines and end with
+                    * opening safe cells. This is because, the game ends
+                    * when all safe cells are opened. If you start by opening
+                    * safe cells, and lets say you open all safe cells and
+                    * win the game, this function will continue to play the
+                    * already won game by trying to flag the cells with mines.
+                    *
+                    * In the api, `this.api.flag` doesn't do anything when
+                    * the game is won. This means that this function will be
+                    * in an infinite loop calling `this.api.flag` on the same
+                    * cell(s) and the cells will never be flagged.
+                    *
+                    * To avoid this, start by flagging the cells with mines, then
+                    * open safe cells, then check if the game is won before repeating
+                    * the cycle. Break if the game is won.
+                    */
+
+                // Flag cells with mines.
                 if (variables.length === mineCount) {
                     for (const variable of variables) {
                         this.api.flag(variable); 
@@ -120,15 +148,17 @@ export default class Solver {
                     changed = true;
                 }
 
-                // Get constraints where the mine count is 0.
+                // Open safe cells.
                 if (mineCount === 0) {
                     for (const variable of variables) {
                         this.api.open(variable);
-                        console.log("Opening cell");
                     }
                     changed = true;
                 }
             }
+
+            // Break when the game is won.
+            if (this.api.checkWin()) break;
         }
     }
 }
