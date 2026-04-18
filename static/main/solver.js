@@ -167,10 +167,15 @@ export default class Solver {
         * Build and return an array of components.
         * A component is a set of connected variables. 2 variables belong
         * in the same component if they share at least one constraint.
+        *
+        * Components are built by constructing a graph where the frontier
+        * variables are the nodes. Frontier variables are cells that are closed
+        * and unflagged, and they have a neighbour that is opened.
+        * A connection is made between variables that share at least one constraint.
+        * A component is then got by finding all connected nodes.
         */
     buildComponents() {
         /*
-            * Build a graph.
             * The graph is represented as an adjacency map.
             * The key is a Number index representing a node on the graph.
             * The value is a set of indices of the node's neighbours.
@@ -189,10 +194,27 @@ export default class Solver {
             }
         }
 
-        /*
-            * Use breadth-first search to build components.
-            */
+        // Using breadth-first search to build components.
+        const components = [];
+        const visited = [];
+        for (const cell of adjacencyMap.keys()) {
+            if (visited.includes(cell)) continue;
 
-        console.log(adjacencyMap);
+            const component = new Set();
+            const queue = [cell];
+            while (queue.length > 0) {
+                const currentCell = queue.shift();
+
+                visited.push(currentCell);
+                component.add(currentCell);
+
+                for (const neighbour of adjacencyMap.get(currentCell)) {
+                    if (visited.includes(neighbour)) continue;
+                    queue.push(neighbour);
+                }
+            }
+
+            components.push(component);
+        }
     }
 }
