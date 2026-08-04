@@ -1,5 +1,5 @@
 # Minesweeper
 
-The classic minesweeper game with a moder UI.
+The classic minesweeper game with a modern UI.
 
 ---
