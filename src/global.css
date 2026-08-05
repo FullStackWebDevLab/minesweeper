@@ -8,3 +8,25 @@
     --text-primary: #e6f1f7;
     --text-secondary: #a9c0cf;
 }
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: "Segoe UI", Roboto, sans-serif;
+}
+
+h1 {
+    margin-top: 20px;
+    margin-bottom: 30px;
+}
+
+h2 {
+    margin-bottom: 20px;
+}
+
+body {
+    background-color: var(--background-color);
+    color: var(--text-primary);
+    height: 100vh;
+}
