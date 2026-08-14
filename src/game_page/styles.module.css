@@ -1,0 +1,29 @@
+.cell {
+    aspect-ratio: 1;
+    transition: all 0.15s ease;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-family: "JetBrainsMono Nerd Font", "JetBrains Mono", monospace;
+    font-weight: bold;
+}
+
+.closedCell {
+    composes: cell;
+    background-color: var(--surface-background-3);
+    border: 1px solid var(--border-color-1);
+    border-radius: 4px;
+    color: var(--danger);
+}
+
+.closedCell:hover {
+    border-color: var(--accent-soft);
+    box-shadow: 0 0 4px var(--accent-soft);
+    transform: scale(1.05);
+}
+
+.openedCell {
+    composes: cell;
+    background: transparent;
+    color: var(--accent);
+}
